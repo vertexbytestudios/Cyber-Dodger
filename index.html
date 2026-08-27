@@ -1,656 +1,245 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-
-  <!-- Mobile / fullscreen -->
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
-
-  <meta name="theme-color" content="#060712" />
-
-  <title>Cyber Dodger</title>
-
-  <!-- YouTube Playables SDK -->
-  <script src="https://www.youtube.com/game_api/v1"></script>
-
-  <style>
-    :root {
-      --bg: #060712;
-      --cyan: #12f7ff;
-      --pink: #ff2c9c;
-      --green: #6dff73;
-      --yellow: #ffe66d;
-      --red: #ff315d;
-      --white: #f3fbff;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+>
+
+<title>Cyber Dodge</title>
+
+<style>
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #071018;
+  font-family: Arial, Helvetica, sans-serif;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+#ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#hud {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  pointer-events: none;
+}
+
+.panel {
+  background: rgba(0, 12, 20, 0.72);
+  border: 1px solid rgba(87, 255, 180, 0.3);
+  border-radius: 14px;
+  padding: 10px 14px;
+  min-width: 110px;
+
+  backdrop-filter: blur(8px);
+}
+
+.label {
+  color: #8da8b5;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.value {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+#overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(12, 37, 51, 0.4),
+      rgba(0, 5, 10, 0.86)
+    );
 
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--white);
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+  pointer-events: auto;
+}
 
-      user-select: none;
-      -webkit-user-select: none;
-      overscroll-behavior: none;
-    }
+.card {
+  width: min(420px, 100%);
+  text-align: center;
 
-    body {
-      display: grid;
-      place-items: center;
-      touch-action: none;
+  padding: 32px 24px;
 
-      padding:
-        max(6px, env(safe-area-inset-top))
-        max(6px, env(safe-area-inset-right))
-        max(6px, env(safe-area-inset-bottom))
-        max(6px, env(safe-area-inset-left));
-    }
+  border-radius: 24px;
 
-    #stage {
-      position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(17, 42, 57, 0.96),
+      rgba(5, 15, 24, 0.96)
+    );
 
-      width: min(
-        calc(100vw - 12px),
-        calc((100dvh - 12px) * 450 / 650)
-      );
+  border:
+    1px solid
+    rgba(87, 255, 180, 0.28);
 
-      height: min(
-        calc(100dvh - 12px),
-        calc((100vw - 12px) * 650 / 450)
-      );
+  box-shadow:
+    0 20px 80px rgba(0, 0, 0, 0.55);
+}
 
-      aspect-ratio: 450 / 650;
+h1 {
+  margin: 0 0 12px;
 
-      overflow: hidden;
+  color: #75ffb5;
 
-      background: #070915;
+  font-size: clamp(34px, 8vw, 56px);
+  line-height: 1;
 
-      border-radius: 10px;
+  letter-spacing: 2px;
+}
 
-      box-shadow:
-        0 0 0 1px rgba(18, 247, 255, 0.22),
-        0 0 30px rgba(18, 247, 255, 0.10);
+p {
+  margin: 0 0 24px;
 
-      contain: layout size style paint;
+  color: #c7d5db;
 
-      touch-action: none;
-    }
+  font-size: 16px;
+  line-height: 1.45;
+}
 
-    canvas {
-      position: absolute;
-      inset: 0;
+button {
+  width: 100%;
 
-      width: 100%;
-      height: 100%;
+  border: 0;
+  border-radius: 16px;
 
-      display: block;
+  padding: 18px 20px;
 
-      touch-action: none;
-    }
+  background:
+    linear-gradient(
+      180deg,
+      #63f7a5,
+      #24bd72
+    );
 
-    /* =========================
-       HUD
-    ========================== */
+  color: #04110a;
 
-    .hud {
-      position: absolute;
+  font-size: 18px;
+  font-weight: 900;
 
-      top: 9px;
-      left: 9px;
-      right: 9px;
+  cursor: pointer;
 
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+  touch-action: manipulation;
 
-      gap: 6px;
+  box-shadow:
+    0 8px 30px
+    rgba(40, 220, 120, 0.22);
+}
 
-      z-index: 5;
+button:active {
+  transform: scale(0.98);
+}
 
-      pointer-events: none;
-    }
+#hint {
+  margin-top: 16px;
+  color: #7f969f;
+  font-size: 13px;
+}
+</style>
 
-    .hud-box {
-      padding: 7px;
-
-      background: rgba(8, 15, 31, 0.72);
-
-      border:
-        1px solid rgba(18, 247, 255, 0.20);
-
-      border-radius: 8px;
-    }
-
-    .hud-label {
-      display: block;
-
-      font-size: 9px;
-      font-weight: 900;
-
-      text-transform: uppercase;
-
-      color: rgba(255, 255, 255, 0.60);
-    }
-
-    .hud-value {
-      display: block;
-
-      margin-top: 3px;
-
-      font-size: clamp(15px, 4vw, 24px);
-      font-weight: 900;
-
-      color: var(--cyan);
-
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* =========================
-       Buttons
-    ========================== */
-
-    .actions {
-      position: absolute;
-
-      right: 9px;
-      bottom: 9px;
-
-      display: flex;
-      gap: 6px;
-
-      z-index: 10;
-    }
-
-    button {
-      min-height: 42px;
-
-      border: 0;
-      border-radius: 8px;
-
-      padding: 9px 13px;
-
-      color: var(--white);
-
-      font: inherit;
-      font-weight: 900;
-
-      cursor: pointer;
-    }
-
-    .small-btn {
-      background: rgba(8, 11, 28, 0.85);
-
-      border:
-        1px solid rgba(255, 255, 255, 0.18);
-
-      text-transform: uppercase;
-
-      font-size: 11px;
-    }
-
-    /* =========================
-       Overlay
-    ========================== */
-
-    .overlay {
-      position: absolute;
-      inset: 0;
-
-      z-index: 20;
-
-      display: grid;
-      place-items: center;
-
-      padding: 18px;
-
-      background:
-        linear-gradient(
-          180deg,
-          rgba(6, 7, 18, 0.35),
-          rgba(6, 7, 18, 0.92)
-        );
-
-      opacity: 0;
-      visibility: hidden;
-
-      transition:
-        opacity 0.16s ease,
-        visibility 0.16s ease;
-    }
-
-    .overlay.open {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .panel {
-      width: min(100%, 380px);
-
-      padding: clamp(18px, 5vw, 28px);
-
-      border-radius: 12px;
-
-      background:
-        linear-gradient(
-          180deg,
-          rgba(16, 22, 48, 0.97),
-          rgba(6, 8, 24, 0.99)
-        );
-
-      border:
-        1px solid rgba(18, 247, 255, 0.30);
-
-      text-align: center;
-
-      box-shadow:
-        0 20px 70px rgba(0, 0, 0, 0.45);
-    }
-
-    .kicker {
-      color: var(--green);
-
-      font-size: 11px;
-      font-weight: 900;
-
-      text-transform: uppercase;
-    }
-
-    h1,
-    h2,
-    p {
-      margin: 0;
-    }
-
-    h1 {
-      margin-top: 8px;
-
-      font-size: clamp(40px, 12vw, 68px);
-
-      line-height: 0.86;
-
-      text-transform: uppercase;
-    }
-
-    h2 {
-      margin-top: 8px;
-
-      font-size: clamp(30px, 9vw, 48px);
-
-      text-transform: uppercase;
-    }
-
-    .copy {
-      margin: 15px auto 0;
-
-      max-width: 30ch;
-
-      color: rgba(255, 255, 255, 0.80);
-
-      line-height: 1.45;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-
-      gap: 7px;
-
-      margin-top: 18px;
-    }
-
-    .stat {
-      padding: 10px 6px;
-
-      border-radius: 8px;
-
-      background: rgba(255, 255, 255, 0.06);
-
-      border:
-        1px solid rgba(255, 255, 255, 0.10);
-    }
-
-    .stat span {
-      display: block;
-
-      color: rgba(255, 255, 255, 0.55);
-
-      font-size: 9px;
-      font-weight: 900;
-
-      text-transform: uppercase;
-    }
-
-    .stat strong {
-      display: block;
-
-      margin-top: 4px;
-
-      color: var(--yellow);
-
-      font-size: clamp(16px, 4vw, 22px);
-    }
-
-    .buttons {
-      display: grid;
-
-      gap: 9px;
-
-      margin-top: 20px;
-    }
-
-    .primary,
-    .secondary,
-    .danger {
-      min-height: 48px;
-
-      text-transform: uppercase;
-    }
-
-    .primary {
-      color: #031118;
-
-      background:
-        linear-gradient(
-          90deg,
-          var(--cyan),
-          var(--green)
-        );
-    }
-
-    .secondary {
-      color: var(--cyan);
-
-      background:
-        rgba(18, 247, 255, 0.08);
-
-      border:
-        1px solid rgba(18, 247, 255, 0.45);
-    }
-
-    .danger {
-      background:
-        linear-gradient(
-          90deg,
-          var(--red),
-          var(--pink)
-        );
-    }
-
-    /* =========================
-       Toast
-    ========================== */
-
-    #toast {
-      position: absolute;
-
-      left: 50%;
-      top: 72px;
-
-      z-index: 30;
-
-      width: min(86%, 330px);
-
-      transform:
-        translateX(-50%)
-        translateY(-12px);
-
-      opacity: 0;
-
-      padding: 9px 12px;
-
-      border-radius: 8px;
-
-      background:
-        rgba(9, 10, 25, 0.94);
-
-      border:
-        1px solid rgba(255, 230, 109, 0.50);
-
-      color: var(--yellow);
-
-      text-align: center;
-
-      font-size: 13px;
-      font-weight: 900;
-
-      pointer-events: none;
-
-      transition:
-        opacity 0.18s,
-        transform 0.18s;
-    }
-
-    #toast.show {
-      opacity: 1;
-
-      transform:
-        translateX(-50%)
-        translateY(0);
-    }
-
-    /* =========================
-       Ad preview outside YT
-    ========================== */
-
-    #adLayer {
-      position: absolute;
-      inset: 0;
-
-      z-index: 40;
-
-      display: grid;
-      place-items: center;
-
-      padding: 20px;
-
-      background:
-        rgba(4, 5, 14, 0.95);
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    #adLayer.open {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .ad-card {
-      width: min(100%, 360px);
-
-      padding: 26px;
-
-      border-radius: 12px;
-
-      text-align: center;
-
-      background:
-        linear-gradient(
-          180deg,
-          #121735,
-          #070817
-        );
-
-      border:
-        1px solid rgba(18, 247, 255, 0.30);
-    }
-
-    .ad-title {
-      color: var(--yellow);
-
-      font-size: 12px;
-      font-weight: 900;
-
-      text-transform: uppercase;
-    }
-
-    .ad-copy {
-      margin-top: 10px;
-
-      font-size: 25px;
-      font-weight: 900;
-
-      text-transform: uppercase;
-    }
-
-    .meter {
-      height: 8px;
-
-      margin-top: 18px;
-
-      overflow: hidden;
-
-      border-radius: 10px;
-
-      background:
-        rgba(255, 255, 255, 0.12);
-    }
-
-    #adFill {
-      width: 0;
-      height: 100%;
-
-      background:
-        linear-gradient(
-          90deg,
-          var(--yellow),
-          var(--pink),
-          var(--cyan)
-        );
-    }
-
-    .ad-note {
-      margin-top: 12px;
-
-      color: rgba(255, 255, 255, 0.60);
-
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    @media (max-width: 390px),
-           (max-height: 590px) {
-
-      body {
-        padding: 0;
-      }
-
-      #stage {
-        width:
-          min(
-            100vw,
-            calc(100dvh * 450 / 650)
-          );
-
-        height:
-          min(
-            100dvh,
-            calc(100vw * 650 / 450)
-          );
-
-        border-radius: 0;
-      }
-
-      .hud {
-        top: 6px;
-        left: 6px;
-        right: 6px;
-
-        gap: 5px;
-      }
-
-      .hud-box {
-        padding: 6px;
-      }
-
-      .actions {
-        right: 6px;
-        bottom: 6px;
-      }
-    }
-  </style>
+<!-- YouTube Playables SDK MUST load before game code -->
+<script src="https://www.youtube.com/game_api/v1"></script>
 </head>
 
 <body>
 
-<div id="stage">
+<div id="app">
 
-  <canvas id="game"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
-  <div class="hud">
+  <div id="ui">
 
-    <div class="hud-box">
-      <span class="hud-label">Score</span>
-      <span id="scoreUI" class="hud-value">0</span>
-    </div>
+    <div id="hud">
 
-    <div class="hud-box">
-      <span class="hud-label">Multiplier</span>
-      <span id="multUI" class="hud-value">1.0x</span>
-    </div>
-
-    <div class="hud-box">
-      <span class="hud-label">Best</span>
-      <span id="bestUI" class="hud-value">0</span>
-    </div>
-
-  </div>
-
-  <div class="actions">
-
-    <button id="pauseBtn" class="small-btn">
-      Pause
-    </button>
-
-    <button id="soundBtn" class="small-btn">
-      Sound
-    </button>
-
-  </div>
-
-  <div id="overlay" class="overlay open">
-    <div id="panel" class="panel"></div>
-  </div>
-
-  <div id="toast"></div>
-
-  <div id="adLayer">
-
-    <div class="ad-card">
-
-      <div id="adTitle" class="ad-title">
-        Ad
+      <div class="panel">
+        <div class="label">SCORE</div>
+        <div class="value" id="score">0</div>
       </div>
 
-      <div id="adCopy" class="ad-copy">
-        Loading
+      <div class="panel">
+        <div class="label">BEST</div>
+        <div class="value" id="best">0</div>
       </div>
 
-      <div class="meter">
-        <div id="adFill"></div>
-      </div>
+    </div>
 
-      <p class="ad-note">
-        Local preview. In YouTube Playables
-        the real YouTube ad API is used.
-      </p>
+    <div id="overlay">
+
+      <div class="card">
+
+        <h1 id="title">CYBER DODGE</h1>
+
+        <p id="message">
+          Move left and right.<br>
+          Avoid the red viruses.
+        </p>
+
+        <button id="startButton">
+          START GAME
+        </button>
+
+        <div id="hint">
+          Touch, drag, mouse or arrow keys
+        </div>
+
+      </div>
 
     </div>
 
@@ -658,4535 +247,2140 @@
 
 </div>
 
-
 <script>
-(() => {
+"use strict";
 
-  "use strict";
+/* =========================================================
+   CONSTANTS
+========================================================= */
 
+const LOGICAL_WIDTH = 390;
+const LOGICAL_HEIGHT = 780;
 
-  /* ============================================================
-     CONSTANTS
-  ============================================================ */
+const PLAYER_Y = 680;
 
-  const WIDTH = 450;
-  const HEIGHT = 650;
+const canvas =
+  document.getElementById("gameCanvas");
 
-  const PLAYER_Y = 568;
-
-  const TAU = Math.PI * 2;
-
-  const SAVE_KEY =
-    "cyber_dodger_save_v3";
-
-  const REVIVE_REWARD_ID =
-    "cyber_dodger_revive_v1";
-
-
-  const COLORS = {
-    cyan: "#12f7ff",
-    pink: "#ff2c9c",
-    green: "#6dff73",
-    yellow: "#ffe66d",
-    red: "#ff315d",
-    violet: "#8f5cff",
-    white: "#f3fbff"
-  };
-
-
-  /* ============================================================
-     DEVICE / QUALITY
-  ============================================================ */
-
-  const isMobile =
-    matchMedia("(pointer: coarse)").matches;
-
-  const reducedMotion =
-    matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-
-  const MOBILE_MODE =
-    isMobile || reducedMotion;
-
-
-  /*
-    Najważniejsze limity wydajności.
-
-    Na telefonach:
-    - mniej particle
-    - mniej itemów
-    - niższy DPR
-    - mniej efektów
-  */
-
-  const QUALITY = {
-
-    dpr:
-      MOBILE_MODE ? 1.5 : 2,
-
-    maxItems:
-      MOBILE_MODE ? 48 : 90,
-
-    maxParticles:
-      MOBILE_MODE ? 110 : 220,
-
-    maxWaves:
-      MOBILE_MODE ? 8 : 16,
-
-    maxMessages:
-      MOBILE_MODE ? 8 : 14,
-
-    stars:
-      MOBILE_MODE ? 42 : 72
-
-  };
-
-
-  /* ============================================================
-     DOM
-  ============================================================ */
-
-  const canvas =
-    document.getElementById("game");
-
-  const ctx =
-    canvas.getContext("2d", {
+const ctx =
+  canvas.getContext(
+    "2d",
+    {
       alpha: false,
       desynchronized: true
-    });
-
-
-  const stage =
-    document.getElementById("stage");
-
-  const overlay =
-    document.getElementById("overlay");
-
-  const panel =
-    document.getElementById("panel");
-
-  const toast =
-    document.getElementById("toast");
-
-  const adLayer =
-    document.getElementById("adLayer");
-
-  const adTitle =
-    document.getElementById("adTitle");
-
-  const adCopy =
-    document.getElementById("adCopy");
-
-  const adFill =
-    document.getElementById("adFill");
-
-
-  const scoreUI =
-    document.getElementById("scoreUI");
-
-  const multUI =
-    document.getElementById("multUI");
-
-  const bestUI =
-    document.getElementById("bestUI");
-
-  const soundBtn =
-    document.getElementById("soundBtn");
-
-  const pauseBtn =
-    document.getElementById("pauseBtn");
-
-
-  /* ============================================================
-     HELPERS
-  ============================================================ */
-
-  const random =
-    (min, max) =>
-      Math.random() * (max - min) + min;
-
-
-  const clamp =
-    (value, min, max) =>
-      Math.max(
-        min,
-        Math.min(max, value)
-      );
-
-
-  const lerp =
-    (a, b, amount) =>
-      a + (b - a) * amount;
-
-
-  const easeOut =
-    t => 1 - Math.pow(1 - t, 3);
-
-
-  /* ============================================================
-     YOUTUBE PLAYABLES
-  ============================================================ */
-
-  function getSDK() {
-    return window.ytgame || null;
-  }
-
-
-  function inYouTubePlayables() {
-
-    return Boolean(
-      getSDK()?.IN_PLAYABLES_ENV
-    );
-
-  }
-
-
-  function reportWarning(error) {
-
-    try {
-
-      getSDK()?.health?.logWarning?.();
-
-    } catch (_) {}
-
-  }
-
-
-  function reportError(error) {
-
-    try {
-
-      getSDK()?.health?.logError?.();
-
-    } catch (_) {}
-
-  }
-
-
-  /* ============================================================
-     GAME STATE
-  ============================================================ */
-
-  const game = {
-
-    state: "boot",
-
-    score: 0,
-
-    best: 0,
-
-    runs: 0,
-
-    multiplier: 1,
-
-    combo: 0,
-
-    comboTimer: 0,
-
-    survival: 0,
-
-    speed: 1,
-
-    spawnTimer: 0.4,
-
-    items: [],
-
-    particles: [],
-
-    waves: [],
-
-    messages: [],
-
-    stars: [],
-
-    shake: 0,
-
-    shakeTimer: 0,
-
-    flash: 0,
-
-    revived: false,
-
-    adActive: false,
-
-    firstFrameSent: false,
-
-    gameReadySent: false,
-
-    systemPaused: false,
-
-    lastScoreSent: 0,
-
-
-    player: {
-
-      x: WIDTH / 2,
-
-      targetX: WIDTH / 2,
-
-      radius: 22,
-
-      lean: 0,
-
-      shield: 0,
-
-      invincible: 0
-
-    },
-
-
-    input: {
-
-      left: false,
-
-      right: false
-
     }
-
-  };
-
-
-  /* ============================================================
-     CANVAS RESIZE
-     OPTIMIZED
-
-     Nie robimy resizeCanvas()
-     w każdej klatce.
-  ============================================================ */
-
-  let canvasRect = {
-    left: 0,
-    width: 1
-  };
-
-
-  let canvasDirty = true;
-
-
-  function updateCanvasRect() {
-
-    canvasRect =
-      canvas.getBoundingClientRect();
-
-    canvasDirty = true;
-
-  }
-
-
-  function resizeCanvas() {
-
-    if (!canvasDirty) {
-      return;
-    }
-
-
-    const rect =
-      canvas.getBoundingClientRect();
-
-
-    const dpr =
-      Math.min(
-        window.devicePixelRatio || 1,
-        QUALITY.dpr
-      );
-
-
-    const width =
-      Math.max(
-        1,
-        Math.round(rect.width * dpr)
-      );
-
-
-    const height =
-      Math.max(
-        1,
-        Math.round(rect.height * dpr)
-      );
-
-
-    if (
-      canvas.width !== width ||
-      canvas.height !== height
-    ) {
-
-      canvas.width = width;
-      canvas.height = height;
-
-    }
-
-
-    canvasRect = rect;
-
-    canvasDirty = false;
-
-  }
-
-
-  const resizeObserver =
-    new ResizeObserver(
-      updateCanvasRect
-    );
-
-
-  resizeObserver.observe(stage);
-
-
-  window.addEventListener(
-    "resize",
-    updateCanvasRect,
-    { passive: true }
   );
 
+const overlay =
+  document.getElementById("overlay");
 
-  /* ============================================================
-     SAVE DATA
-  ============================================================ */
+const title =
+  document.getElementById("title");
 
-  async function loadSave() {
+const message =
+  document.getElementById("message");
 
-    let data = "";
+const startButton =
+  document.getElementById("startButton");
 
+const scoreElement =
+  document.getElementById("score");
+
+const bestElement =
+  document.getElementById("best");
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function clamp(value, min, max) {
+  return Math.max(
+    min,
+    Math.min(max, value)
+  );
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function rand(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function distanceSquared(
+  ax,
+  ay,
+  bx,
+  by
+) {
+  const dx = ax - bx;
+  const dy = ay - by;
+
+  return dx * dx + dy * dy;
+}
+
+
+/* =========================================================
+   CANVAS / RESPONSIVE
+========================================================= */
+
+let dpr = 1;
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
+
+function resizeCanvas() {
+
+  const width =
+    window.innerWidth;
+
+  const height =
+    window.innerHeight;
+
+  dpr = Math.min(
+    window.devicePixelRatio || 1,
+    2
+  );
+
+  canvas.width =
+    Math.max(
+      1,
+      Math.floor(width * dpr)
+    );
+
+  canvas.height =
+    Math.max(
+      1,
+      Math.floor(height * dpr)
+    );
+
+  canvas.style.width =
+    width + "px";
+
+  canvas.style.height =
+    height + "px";
+
+  scale =
+    Math.min(
+      width / LOGICAL_WIDTH,
+      height / LOGICAL_HEIGHT
+    );
+
+  offsetX =
+    (width - LOGICAL_WIDTH * scale) * 0.5;
+
+  offsetY =
+    (height - LOGICAL_HEIGHT * scale) * 0.5;
+}
+
+window.addEventListener(
+  "resize",
+  resizeCanvas,
+  { passive: true }
+);
+
+resizeCanvas();
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+const game = {
+
+  state: "menu",
+
+  pausedByYouTube: false,
+
+  running: false,
+
+  time: 0,
+
+  score: 0,
+
+  best: 0,
+
+  spawnTimer: 0,
+
+  survival: 0,
+
+  speedScale: 1,
+
+  items: [],
+
+  particles: [],
+
+  input: {
+    left: false,
+    right: false,
+    pointerActive: false,
+    pointerX: LOGICAL_WIDTH * 0.5
+  },
+
+  player: {
+    x: LOGICAL_WIDTH * 0.5,
+    targetX: LOGICAL_WIDTH * 0.5,
+    radius: 20,
+    invincible: 0,
+    shield: 0,
+    lean: 0
+  },
+
+  audioEnabled: true,
+
+  firstFrameSent: false,
+
+  readySent: false,
+
+  lastSaveTime: 0
+};
+
+
+/* =========================================================
+   YOUTUBE PLAYABLES SDK
+========================================================= */
+
+function hasYTGame() {
+
+  return (
+    typeof window.ytgame !== "undefined" &&
+    window.ytgame
+  );
+}
+
+
+function sendFirstFrameReady() {
+
+  if (
+    game.firstFrameSent ||
+    !hasYTGame()
+  ) {
+    return;
+  }
+
+  try {
+
+    if (
+      ytgame.game &&
+      typeof ytgame.game.firstFrameReady === "function"
+    ) {
+
+      ytgame.game.firstFrameReady();
+
+      game.firstFrameSent = true;
+    }
+
+  } catch (error) {
+  }
+}
+
+
+function sendGameReady() {
+
+  if (
+    game.readySent ||
+    !hasYTGame()
+  ) {
+    return;
+  }
+
+  try {
+
+    if (
+      ytgame.game &&
+      typeof ytgame.game.gameReady === "function"
+    ) {
+
+      ytgame.game.gameReady();
+
+      game.readySent = true;
+    }
+
+  } catch (error) {
+  }
+}
+
+
+async function saveGame() {
+
+  const now =
+    performance.now();
+
+  if (
+    now - game.lastSaveTime < 1000
+  ) {
+    return;
+  }
+
+  game.lastSaveTime = now;
+
+  const data = JSON.stringify({
+    version: 1,
+    best: Math.floor(game.best)
+  });
+
+  if (
+    hasYTGame() &&
+    ytgame.game &&
+    typeof ytgame.game.saveData === "function"
+  ) {
+
+    try {
+
+      await ytgame.game.saveData(data);
+
+      return;
+
+    } catch (error) {
+    }
+  }
+
+  try {
+
+    localStorage.setItem(
+      "cyber_dodge_save",
+      data
+    );
+
+  } catch (error) {
+  }
+}
+
+
+async function loadGame() {
+
+  let data = null;
+
+  if (
+    hasYTGame() &&
+    ytgame.game &&
+    typeof ytgame.game.loadData === "function"
+  ) {
 
     try {
 
       data =
-        await getSDK()
-          ?.game
-          ?.loadData?.() || "";
+        await ytgame.game.loadData();
 
     } catch (error) {
-
-      reportWarning(error);
-
     }
+  }
 
-
-    if (!data) {
-
-      try {
-
-        data =
-          localStorage.getItem(SAVE_KEY) || "";
-
-      } catch (error) {
-
-        reportWarning(error);
-
-      }
-
-    }
-
+  if (!data) {
 
     try {
 
-      const save =
-        JSON.parse(data);
+      data =
+        localStorage.getItem(
+          "cyber_dodge_save"
+        );
 
+    } catch (error) {
+    }
+  }
+
+  if (!data) {
+    return;
+  }
+
+  try {
+
+    const parsed =
+      JSON.parse(data);
+
+    if (
+      Number.isFinite(parsed.best)
+    ) {
 
       game.best =
         Math.max(
           0,
-          Math.floor(save.best || 0)
+          parsed.best
         );
-
-
-      game.runs =
-        Math.max(
-          0,
-          Math.floor(save.runs || 0)
-        );
-
-    } catch (_) {}
-
-  }
-
-
-  async function saveGame() {
-
-    const data =
-      JSON.stringify({
-        best: game.best,
-        runs: game.runs
-      });
-
-
-    try {
-
-      localStorage.setItem(
-        SAVE_KEY,
-        data
-      );
-
-    } catch (error) {
-
-      reportWarning(error);
-
     }
 
-
-    try {
-
-      await getSDK()
-        ?.game
-        ?.saveData?.(data);
-
-    } catch (error) {
-
-      reportWarning(error);
-
-    }
-
+  } catch (error) {
   }
 
+  updateHUD();
+}
 
-  async function sendScore() {
+
+function setupYouTubeCallbacks() {
+
+  if (!hasYTGame()) {
+    return;
+  }
+
+  try {
 
     if (
-      game.best <=
-      game.lastScoreSent
+      ytgame.system &&
+      typeof ytgame.system.isAudioEnabled === "function"
     ) {
-      return;
+
+      game.audioEnabled =
+        ytgame.system.isAudioEnabled();
     }
 
-
-    try {
-
-      await getSDK()
-        ?.engagement
-        ?.sendScore?.({
-          value: game.best
-        });
-
-
-      game.lastScoreSent =
-        game.best;
-
-    } catch (error) {
-
-      reportWarning(error);
-
-    }
-
+  } catch (error) {
   }
 
 
-  /* ============================================================
-     YOUTUBE LIFECYCLE
-  ============================================================ */
-
-  function notifyFirstFrameReady() {
-
-    if (game.firstFrameSent) {
-      return;
-    }
-
-
-    game.firstFrameSent = true;
-
-
-    try {
-
-      getSDK()
-        ?.game
-        ?.firstFrameReady?.();
-
-    } catch (error) {
-
-      reportWarning(error);
-
-    }
-
-  }
-
-
-  function notifyGameReady() {
-
-    if (game.gameReadySent) {
-      return;
-    }
-
-
-    game.gameReadySent = true;
-
-
-    try {
-
-      getSDK()
-        ?.game
-        ?.gameReady?.();
-
-    } catch (error) {
-
-      reportWarning(error);
-
-    }
-
-  }
-
-
-  /* ============================================================
-     AUDIO
-     LŻEJSZE NA MOBILE
-  ============================================================ */
-
-  const audio = {
-
-    context: null,
-
-    master: null,
-
-    music: null,
-
-    effects: null,
-
-    enabled: true,
-
-    youtubeEnabled: true,
-
-    available: true,
-
-    timer: 0,
-
-    nextNote: 0,
-
-    step: 0,
-
-    tempo: 126
-
-  };
-
-
-  function audioEnabled() {
-
-    return (
-      audio.enabled &&
-      audio.youtubeEnabled &&
-      audio.available
-    );
-
-  }
-
-
-  function initAudio() {
-
-    if (audio.context) {
-      return audio.context;
-    }
-
-
-    const AudioContextClass =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-
-    if (!AudioContextClass) {
-
-      audio.available = false;
-
-      return null;
-
-    }
-
-
-    try {
-
-      const ac =
-        new AudioContextClass();
-
-
-      const master =
-        ac.createGain();
-
-      const music =
-        ac.createGain();
-
-      const effects =
-        ac.createGain();
-
-
-      master.gain.value = 0.75;
-
-      music.gain.value =
-        MOBILE_MODE ? 0.10 : 0.16;
-
-      effects.gain.value = 0.55;
-
-
-      music.connect(master);
-
-      effects.connect(master);
-
-      master.connect(
-        ac.destination
-      );
-
-
-      audio.context = ac;
-
-      audio.master = master;
-
-      audio.music = music;
-
-      audio.effects = effects;
-
-
-      return ac;
-
-    } catch (error) {
-
-      audio.available = false;
-
-      reportWarning(error);
-
-      return null;
-
-    }
-
-  }
-
-
-  function playTone(
-    frequency,
-    start,
-    duration,
-    type,
-    volume,
-    destination,
-    slideTo
-  ) {
-
-    if (!audioEnabled()) {
-      return;
-    }
-
-
-    const ac =
-      audio.context;
-
-
-    if (!ac) {
-      return;
-    }
-
-
-    const oscillator =
-      ac.createOscillator();
-
-    const gain =
-      ac.createGain();
-
-
-    oscillator.type = type;
-
-    oscillator.frequency
-      .setValueAtTime(
-        frequency,
-        start
-      );
-
-
-    if (slideTo) {
-
-      oscillator.frequency
-        .exponentialRampToValueAtTime(
-          Math.max(20, slideTo),
-          start + duration
-        );
-
-    }
-
-
-    gain.gain.setValueAtTime(
-      0.0001,
-      start
-    );
-
-
-    gain.gain
-      .exponentialRampToValueAtTime(
-        volume,
-        start + 0.01
-      );
-
-
-    gain.gain
-      .exponentialRampToValueAtTime(
-        0.0001,
-        start + duration
-      );
-
-
-    oscillator.connect(gain);
-
-    gain.connect(destination);
-
-
-    oscillator.onended = () => {
-
-      try {
-
-        oscillator.disconnect();
-        gain.disconnect();
-
-      } catch (_) {}
-
-    };
-
-
-    oscillator.start(start);
-
-    oscillator.stop(
-      start + duration + 0.03
-    );
-
-  }
-
-
-  function playSFX(
-    frequency,
-    duration = 0.08,
-    type = "square",
-    volume = 0.05,
-    slideTo
-  ) {
+  try {
 
     if (
-      !audio.context ||
-      !audioEnabled()
-    ) {
-      return;
-    }
-
-
-    playTone(
-      frequency,
-      audio.context.currentTime,
-      duration,
-      type,
-      volume,
-      audio.effects,
-      slideTo
-    );
-
-  }
-
-
-  function scheduleMusic() {
-
-    const ac =
-      audio.context;
-
-
-    if (
-      !ac ||
-      !audioEnabled()
+      ytgame.system &&
+      typeof ytgame.system.onAudioEnabledChange === "function"
     ) {
 
-      stopMusic();
+      ytgame.system.onAudioEnabledChange(
+        function(enabled) {
 
-      return;
-
-    }
-
-
-    const bass = [
-      55,
-      55,
-      82.41,
-      73.42,
-      55,
-      65.41,
-      82.41,
-      98
-    ];
-
-
-    const lead = [
-      440,
-      0,
-      523.25,
-      0,
-      659.25,
-      0,
-      587.33,
-      0
-    ];
-
-
-    const stepDuration =
-      60 / audio.tempo / 4;
-
-
-    while (
-      audio.nextNote <
-      ac.currentTime + 0.25
-    ) {
-
-      const step =
-        audio.step;
-
-
-      const time =
-        audio.nextNote;
-
-
-      if (step % 4 === 0) {
-
-        const note =
-          bass[
-            (step / 4) %
-            bass.length
-          ];
-
-
-        playTone(
-          note,
-          time,
-          stepDuration * 2,
-          "sawtooth",
-          MOBILE_MODE ? 0.035 : 0.06,
-          audio.music,
-          note * 0.995
-        );
-
-      }
-
-
-      const leadNote =
-        lead[
-          step %
-          lead.length
-        ];
-
-
-      if (
-        leadNote &&
-        step % 2 === 0
-      ) {
-
-        playTone(
-          leadNote,
-          time,
-          stepDuration * 0.65,
-          "square",
-          MOBILE_MODE ? 0.008 : 0.018,
-          audio.music
-        );
-
-      }
-
-
-      audio.step =
-        (step + 1) % 32;
-
-
-      audio.nextNote +=
-        stepDuration;
-
-    }
-
-  }
-
-
-  function startMusic() {
-
-    const ac =
-      audio.context;
-
-
-    if (
-      !ac ||
-      !audioEnabled() ||
-      audio.timer
-    ) {
-      return;
-    }
-
-
-    audio.nextNote =
-      ac.currentTime + 0.05;
-
-
-    audio.timer =
-      setInterval(
-        scheduleMusic,
-        MOBILE_MODE ? 140 : 80
+          game.audioEnabled =
+            !!enabled;
+        }
       );
-
-
-    scheduleMusic();
-
-  }
-
-
-  function stopMusic() {
-
-    if (audio.timer) {
-
-      clearInterval(audio.timer);
-
-      audio.timer = 0;
-
     }
 
+  } catch (error) {
   }
 
 
-  function unlockAudio() {
-
-    const ac =
-      initAudio();
-
-
-    if (!ac) {
-      return;
-    }
-
-
-    ac.resume()
-      .then(() => {
-
-        startMusic();
-
-      })
-      .catch(reportWarning);
-
-  }
-
-
-  function resumeAudio() {
-
-    if (!audio.context) {
-      return;
-    }
-
-
-    audio.context
-      .resume()
-      .then(startMusic)
-      .catch(reportWarning);
-
-  }
-
-
-  function suspendAudio() {
-
-    stopMusic();
-
+  try {
 
     if (
-      audio.context &&
-      audio.context.state === "running"
+      ytgame.system &&
+      typeof ytgame.system.onPause === "function"
     ) {
 
-      audio.context
-        .suspend()
-        .catch(reportWarning);
+      ytgame.system.onPause(
+        function() {
 
-    }
-
-  }
-
-
-  function updateSoundButton() {
-
-    soundBtn.textContent =
-      audioEnabled()
-        ? "Sound"
-        : "Muted";
-
-  }
-
-
-  /* ============================================================
-     SDK PAUSE / AUDIO
-  ============================================================ */
-
-  function initSDKHooks() {
-
-    const sdk =
-      getSDK();
-
-
-    if (!sdk) {
-      return;
-    }
-
-
-    try {
-
-      if (
-        typeof sdk.system?.isAudioEnabled ===
-        "function"
-      ) {
-
-        audio.youtubeEnabled =
-          sdk.system.isAudioEnabled();
-
-      }
-
-
-      sdk.system
-        ?.onAudioEnabledChange
-        ?.((enabled) => {
-
-          audio.youtubeEnabled =
-            Boolean(enabled);
-
-
-          if (!enabled) {
-
-            stopMusic();
-
-          } else {
-
-            resumeAudio();
-
-          }
-
-
-          updateSoundButton();
-
-        });
-
-
-      sdk.system
-        ?.onPause
-        ?.(() => {
-
-          if (
-            game.state ===
-            "playing"
-          ) {
-
-            game.state =
-              "paused";
-
-            game.systemPaused =
-              true;
-
-          }
-
+          game.pausedByYouTube = true;
 
           saveGame();
-
-          suspendAudio();
-
-        });
-
-
-      sdk.system
-        ?.onResume
-        ?.(() => {
-
-          if (
-            game.systemPaused &&
-            game.state ===
-            "paused"
-          ) {
-
-            game.systemPaused =
-              false;
-
-            showPauseMenu();
-
-          }
-
-        });
-
-    } catch (error) {
-
-      reportWarning(error);
-
-    }
-
-  }
-
-
-  /* ============================================================
-     HUD
-     Aktualizowany maksymalnie 10x / sekundę
-  ============================================================ */
-
-  let lastHUDUpdate = 0;
-
-
-  function updateHUD(force = false) {
-
-    const now =
-      performance.now();
-
-
-    if (
-      !force &&
-      now - lastHUDUpdate < 100
-    ) {
-      return;
-    }
-
-
-    lastHUDUpdate = now;
-
-
-    scoreUI.textContent =
-      Math.floor(game.score);
-
-
-    multUI.textContent =
-      game.multiplier.toFixed(1) + "x";
-
-
-    bestUI.textContent =
-      Math.floor(game.best);
-
-
-    pauseBtn.style.display =
-      (
-        game.state === "playing" ||
-        game.state === "paused"
-      )
-        ? "block"
-        : "none";
-
-
-    pauseBtn.textContent =
-      game.state === "paused"
-        ? "Play"
-        : "Pause";
-
-  }
-
-
-  /* ============================================================
-     TOAST
-  ============================================================ */
-
-  function showToast(text) {
-
-    toast.textContent =
-      text;
-
-
-    toast.classList.add(
-      "show"
-    );
-
-
-    clearTimeout(
-      showToast.timer
-    );
-
-
-    showToast.timer =
-      setTimeout(
-        () => {
-
-          toast.classList.remove(
-            "show"
-          );
-
-        },
-        1200
-      );
-
-  }
-
-
-  /* ============================================================
-     MENU
-  ============================================================ */
-
-  function openOverlay() {
-
-    overlay.classList.add(
-      "open"
-    );
-
-  }
-
-
-  function closeOverlay() {
-
-    overlay.classList.remove(
-      "open"
-    );
-
-  }
-
-
-  function showMenu() {
-
-    game.state =
-      "menu";
-
-
-    stopMusic();
-
-
-    panel.innerHTML = `
-      <div class="kicker">
-        Neon survival
-      </div>
-
-      <h1>
-        Cyber<br>
-        Dodger
-      </h1>
-
-      <p class="copy">
-        Collect clean data,
-        dodge virus signals
-        and build your multiplier.
-      </p>
-
-      <div class="stats">
-
-        <div class="stat">
-          <span>Best</span>
-          <strong>${game.best}</strong>
-        </div>
-
-        <div class="stat">
-          <span>Runs</span>
-          <strong>${game.runs}</strong>
-        </div>
-
-        <div class="stat">
-          <span>Mode</span>
-          <strong>60s+</strong>
-        </div>
-
-      </div>
-
-      <div class="buttons">
-
-        <button
-          id="startBtn"
-          class="primary"
-        >
-          Start Run
-        </button>
-
-      </div>
-    `;
-
-
-    openOverlay();
-
-
-    document
-      .getElementById("startBtn")
-      .addEventListener(
-        "click",
-        () => {
-
-          unlockAudio();
-
-          playSFX(
-            700,
-            0.06,
-            "square",
-            0.05,
-            1000
-          );
-
-          startGame();
-
         }
       );
+    }
 
-
-    updateHUD(true);
-
+  } catch (error) {
   }
 
 
-  function showPauseMenu() {
+  try {
 
-    game.state =
-      "paused";
+    if (
+      ytgame.system &&
+      typeof ytgame.system.onResume === "function"
+    ) {
 
+      ytgame.system.onResume(
+        function() {
 
-    panel.innerHTML = `
-      <div class="kicker">
-        Signal paused
-      </div>
+          game.pausedByYouTube = false;
 
-      <h2>
-        Paused
-      </h2>
+          lastFrameTime =
+            performance.now();
+        }
+      );
+    }
 
-      <div class="stats">
-
-        <div class="stat">
-          <span>Score</span>
-          <strong>
-            ${Math.floor(game.score)}
-          </strong>
-        </div>
-
-        <div class="stat">
-          <span>Mult</span>
-          <strong>
-            ${game.multiplier.toFixed(1)}x
-          </strong>
-        </div>
-
-        <div class="stat">
-          <span>Time</span>
-          <strong>
-            ${Math.floor(game.survival)}s
-          </strong>
-        </div>
-
-      </div>
-
-      <div class="buttons">
-
-        <button
-          id="resumeBtn"
-          class="primary"
-        >
-          Resume
-        </button>
-
-        <button
-          id="menuBtn"
-          class="secondary"
-        >
-          Main Menu
-        </button>
-
-      </div>
-    `;
-
-
-    openOverlay();
-
-
-    document
-      .getElementById("resumeBtn")
-      .onclick =
-      () => {
-
-        unlockAudio();
-
-        resumeGame();
-
-      };
-
-
-    document
-      .getElementById("menuBtn")
-      .onclick =
-      () => {
-
-        showMenu();
-
-      };
-
-
-    updateHUD(true);
-
+  } catch (error) {
   }
+}
 
 
-  function showGameOverMenu() {
+/* =========================================================
+   GAME RESET
+========================================================= */
 
-    const reviveButton =
-      game.revived
-        ? `
-          <button
-            class="secondary"
-            disabled
-          >
-            Revive Used
-          </button>
-        `
-        : `
-          <button
-            id="reviveBtn"
-            class="primary"
-          >
-            Revive / Continue
-          </button>
-        `;
+function resetGame() {
 
+  game.score = 0;
 
-    panel.innerHTML = `
-      <div class="kicker">
-        Signal lost
-      </div>
+  game.survival = 0;
 
-      <h2>
-        Game Over
-      </h2>
+  game.speedScale = 1;
 
-      <div class="stats">
+  game.spawnTimer = 0.15;
 
-        <div class="stat">
-          <span>Score</span>
-          <strong>
-            ${Math.floor(game.score)}
-          </strong>
-        </div>
+  game.items.length = 0;
 
-        <div class="stat">
-          <span>Best</span>
-          <strong>
-            ${Math.floor(game.best)}
-          </strong>
-        </div>
+  game.particles.length = 0;
 
-        <div class="stat">
-          <span>Combo</span>
-          <strong>
-            ${Math.floor(game.combo)}
-          </strong>
-        </div>
+  game.player.x =
+    LOGICAL_WIDTH * 0.5;
 
-      </div>
+  game.player.targetX =
+    LOGICAL_WIDTH * 0.5;
 
-      <div class="buttons">
+  game.player.radius = 20;
 
-        ${reviveButton}
+  game.player.invincible = 1;
 
-        <button
-          id="retryBtn"
-          class="secondary"
-        >
-          Try Again
-        </button>
+  game.player.shield = 0;
 
-        <button
-          id="homeBtn"
-          class="danger"
-        >
-          Main Menu
-        </button>
+  game.player.lean = 0;
 
-      </div>
-    `;
+  updateHUD();
+}
 
 
-    openOverlay();
+/* =========================================================
+   SPAWN SYSTEM
+========================================================= */
+
+function spawnItem(
+  type,
+  x,
+  y = -50
+) {
+
+  const baseSpeed =
+    rand(175, 235) *
+    game.speedScale;
+
+  const item = {
+
+    type: type,
+
+    x: x,
+
+    baseX: x,
+
+    y: y,
+
+    radius:
+      type === "virus"
+        ? rand(20, 26)
+        : type === "shield"
+          ? 16
+          : rand(11, 15),
+
+    speed:
+      type === "virus"
+        ? baseSpeed * rand(1.0, 1.2)
+        : baseSpeed * rand(0.86, 1.05),
+
+    drift:
+      type === "virus"
+        ? rand(5, 20)
+        : rand(2, 10),
+
+    phase:
+      rand(0, Math.PI * 2),
+
+    age: 0,
+
+    rot:
+      rand(0, Math.PI * 2),
+
+    spin:
+      type === "virus"
+        ? rand(-3.5, 3.5)
+        : rand(-2, 2),
+
+    value:
+      type === "data"
+        ? Math.round(rand(10, 18))
+        : 0
+  };
+
+  game.items.push(item);
+}
 
 
-    document
-      .getElementById("reviveBtn")
-      ?.addEventListener(
-        "click",
-        revivePlayer
+/*
+  GUARANTEED OBSTACLE SPAWN
+*/
+
+function spawnWave() {
+
+  const margin = 45;
+
+  const firstX =
+    rand(
+      margin,
+      LOGICAL_WIDTH - margin
+    );
+
+  /*
+    Always spawn one obstacle.
+    This prevents the "no obstacles" bug.
+  */
+
+  spawnItem(
+    "virus",
+    firstX
+  );
+
+
+  /*
+    Additional obstacle
+  */
+
+  if (
+    game.survival > 6 &&
+    Math.random() < 0.38
+  ) {
+
+    let secondX =
+      rand(
+        margin,
+        LOGICAL_WIDTH - margin
       );
 
-
-    document
-      .getElementById("retryBtn")
-      .onclick =
-      () => {
-
-        unlockAudio();
-
-        startGame();
-
-      };
-
-
-    document
-      .getElementById("homeBtn")
-      .onclick =
-      () => {
-
-        showMenu();
-
-      };
-
-  }
-
-
-  /* ============================================================
-     GAME RESET / START
-  ============================================================ */
-
-  function resetGame() {
-
-    game.score = 0;
-
-    game.multiplier = 1;
-
-    game.combo = 0;
-
-    game.comboTimer = 0;
-
-    game.survival = 0;
-
-    game.speed = 1;
-
-    game.spawnTimer = 0.4;
-
-    game.shake = 0;
-
-    game.shakeTimer = 0;
-
-    game.flash = 0;
-
-    game.revived = false;
-
-    game.adActive = false;
-
-
-    game.items.length = 0;
-
-    game.particles.length = 0;
-
-    game.waves.length = 0;
-
-    game.messages.length = 0;
-
-
-    game.player.x =
-      WIDTH / 2;
-
-    game.player.targetX =
-      WIDTH / 2;
-
-    game.player.lean = 0;
-
-    game.player.shield = 0;
-
-    game.player.invincible = 0;
-
-  }
-
-
-  function startGame() {
-
-    resetGame();
-
-
-    game.state =
-      "playing";
-
-
-    game.runs++;
-
-
-    saveGame();
-
-
-    closeOverlay();
-
-
-    resumeAudio();
-
-
-    burst(
-      WIDTH / 2,
-      PLAYER_Y,
-      COLORS.cyan,
-      MOBILE_MODE ? 12 : 22,
-      180
-    );
-
-
-    showToast(
-      "Run started"
-    );
-
-
-    updateHUD(true);
-
-  }
-
-
-  function resumeGame() {
-
     if (
-      game.state !==
-      "paused"
-    ) {
-      return;
-    }
-
-
-    game.state =
-      "playing";
-
-
-    closeOverlay();
-
-
-    resumeAudio();
-
-
-    updateHUD(true);
-
-  }
-
-
-  function togglePause() {
-
-    if (
-      game.state ===
-      "playing"
+      Math.abs(
+        secondX - firstX
+      ) < 85
     ) {
 
-      suspendAudio();
+      if (
+        secondX <
+        LOGICAL_WIDTH * 0.5
+      ) {
 
-      showPauseMenu();
+        secondX += 110;
 
-    }
+      } else {
 
-    else if (
-      game.state ===
-      "paused"
-    ) {
-
-      resumeGame();
-
-    }
-
-  }
-
-
-  /* ============================================================
-     ADS
-     YouTube Playables:
-     - rewarded
-     - interstitial
-
-     Local preview poza Playables.
-  ============================================================ */
-
-  async function requestAd(type) {
-
-    const sdk =
-      getSDK();
-
-
-    /*
-      PRAWDZIWE ŚRODOWISKO
-      YOUTUBE PLAYABLES
-    */
-
-    if (
-      inYouTubePlayables()
-    ) {
-
-      try {
-
-        if (
-          type === "rewarded" &&
-          typeof sdk
-            ?.ads
-            ?.requestRewardedAd ===
-          "function"
-        ) {
-
-          return Boolean(
-            await sdk.ads.requestRewardedAd(
-              REVIVE_REWARD_ID
-            )
-          );
-
-        }
-
-
-        if (
-          type === "interstitial" &&
-          typeof sdk
-            ?.ads
-            ?.requestInterstitialAd ===
-          "function"
-        ) {
-
-          await sdk.ads.requestInterstitialAd();
-
-          return true;
-
-        }
-
-
-        return false;
-
-      } catch (error) {
-
-        reportWarning(error);
-
-        return false;
-
+        secondX -= 110;
       }
-
     }
 
+    secondX =
+      clamp(
+        secondX,
+        margin,
+        LOGICAL_WIDTH - margin
+      );
 
-    /*
-      POZA PLAYABLES
-      tylko lokalny preview
-    */
-
-    return simulateAd(type);
-
+    spawnItem(
+      "virus",
+      secondX,
+      -120
+    );
   }
 
 
-  function simulateAd(type) {
+  /*
+    Collectible
+  */
 
-    game.adActive = true;
+  if (
+    Math.random() < 0.72
+  ) {
 
+    let dataX =
+      rand(
+        margin,
+        LOGICAL_WIDTH - margin
+      );
 
-    adLayer.classList.add(
-      "open"
-    );
+    if (
+      Math.abs(
+        dataX - firstX
+      ) < 55
+    ) {
 
-
-    adFill.style.width =
-      "0%";
-
-
-    adTitle.textContent =
-      type === "rewarded"
-        ? "Rewarded Ad"
-        : "Interstitial";
-
-
-    adCopy.textContent =
-      type === "rewarded"
-        ? "Revive Loading"
-        : "Ad Break";
-
-
-    return new Promise(
-      resolve => {
-
-        const start =
-          performance.now();
-
-
-        const duration =
-          type === "rewarded"
-            ? 1200
-            : 900;
-
-
-        function tick(now) {
-
-          const progress =
-            clamp(
-              (now - start) /
-              duration,
-              0,
-              1
-            );
-
-
-          adFill.style.width =
-            Math.round(
-              easeOut(progress) *
-              100
-            ) + "%";
-
-
-          if (
-            progress >= 1
-          ) {
-
-            adLayer
-              .classList
-              .remove("open");
-
-
-            game.adActive =
-              false;
-
-
-            resolve(true);
-
-          } else {
-
-            requestAnimationFrame(
-              tick
-            );
-
-          }
-
-        }
-
-
-        requestAnimationFrame(
-          tick
+      dataX =
+        clamp(
+          dataX +
+          (
+            Math.random() < 0.5
+              ? -90
+              : 90
+          ),
+          margin,
+          LOGICAL_WIDTH - margin
         );
+    }
 
-      }
+    spawnItem(
+      "data",
+      dataX,
+      -80
     );
-
   }
 
 
-  async function revivePlayer() {
+  /*
+    Rare shield
+  */
+
+  if (
+    game.survival > 10 &&
+    game.player.shield < 1 &&
+    Math.random() < 0.09
+  ) {
+
+    spawnItem(
+      "shield",
+      rand(
+        margin,
+        LOGICAL_WIDTH - margin
+      ),
+      -160
+    );
+  }
+}
+
+
+function forceInitialObstacles() {
+
+  /*
+    Guaranteed visible obstacles.
+  */
+
+  spawnItem(
+    "virus",
+    LOGICAL_WIDTH * 0.25,
+    80
+  );
+
+  spawnItem(
+    "virus",
+    LOGICAL_WIDTH * 0.5,
+    -40
+  );
+
+  spawnItem(
+    "virus",
+    LOGICAL_WIDTH * 0.75,
+    -150
+  );
+
+  spawnItem(
+    "data",
+    LOGICAL_WIDTH * 0.38,
+    140
+  );
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function burst(
+  x,
+  y,
+  amount
+) {
+
+  const count =
+    Math.min(
+      amount,
+      24
+    );
+
+  for (
+    let i = 0;
+    i < count;
+    i++
+  ) {
+
+    const angle =
+      Math.random() *
+      Math.PI * 2;
+
+    const speed =
+      rand(50, 170);
+
+    game.particles.push({
+
+      x: x,
+      y: y,
+
+      vx:
+        Math.cos(angle) *
+        speed,
+
+      vy:
+        Math.sin(angle) *
+        speed,
+
+      life:
+        rand(0.25, 0.65),
+
+      maxLife: 0.65,
+
+      size:
+        rand(2, 5)
+    });
+  }
+
+  /*
+    Hard particle cap for mobile.
+  */
+
+  if (
+    game.particles.length > 120
+  ) {
+
+    game.particles.splice(
+      0,
+      game.particles.length - 120
+    );
+  }
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+function screenToGameX(
+  clientX
+) {
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+  const x =
+    clientX - rect.left;
+
+  return clamp(
+    (x - offsetX) / scale,
+    0,
+    LOGICAL_WIDTH
+  );
+}
+
+
+function setPointerX(
+  clientX
+) {
+
+  game.input.pointerX =
+    screenToGameX(clientX);
+
+  game.player.targetX =
+    game.input.pointerX;
+}
+
+
+canvas.addEventListener(
+  "pointerdown",
+  function(event) {
 
     if (
-      game.revived
+      game.state !== "playing"
     ) {
       return;
     }
 
-
-    const rewarded =
-      await requestAd(
-        "rewarded"
-      );
-
-
-    if (!rewarded) {
-
-      showToast(
-        "Reward unavailable"
-      );
-
-      return;
-
-    }
-
-
-    game.revived =
+    game.input.pointerActive =
       true;
 
-
-    game.state =
-      "playing";
-
-
-    game.items.length =
-      0;
-
-
-    game.player.shield =
-      1;
-
-
-    game.player.invincible =
-      3;
-
-
-    closeOverlay();
-
-
-    resumeAudio();
-
-
-    burst(
-      game.player.x,
-      PLAYER_Y,
-      COLORS.green,
-      MOBILE_MODE ? 22 : 40,
-      230
+    setPointerX(
+      event.clientX
     );
 
+    try {
 
-    addWave(
-      game.player.x,
-      PLAYER_Y,
-      COLORS.green,
-      80
-    );
-
-
-    playSFX(
-      420,
-      0.18,
-      "triangle",
-      0.07,
-      760
-    );
-
-
-    updateHUD(true);
-
-  }
-
-
-  /* ============================================================
-     EFFECTS
-  ============================================================ */
-
-  function addMessage(
-    text,
-    x,
-    y,
-    color
-  ) {
-
-    if (
-      game.messages.length >=
-      QUALITY.maxMessages
-    ) {
-
-      game.messages.shift();
-
-    }
-
-
-    game.messages.push({
-
-      text,
-      x,
-      y,
-
-      color,
-
-      life: 0.8,
-
-      maxLife: 0.8,
-
-      velocityY: -36
-
-    });
-
-  }
-
-
-  function burst(
-    x,
-    y,
-    color,
-    count,
-    force
-  ) {
-
-    /*
-      PRAWDZIWY LIMIT
-      particle
-    */
-
-    const available =
-      QUALITY.maxParticles -
-      game.particles.length;
-
-
-    count =
-      Math.max(
-        0,
-        Math.min(
-          count,
-          available
-        )
+      canvas.setPointerCapture(
+        event.pointerId
       );
 
-
-    for (
-      let i = 0;
-      i < count;
-      i++
-    ) {
-
-      const angle =
-        random(0, TAU);
-
-
-      const speed =
-        random(
-          force * 0.22,
-          force
-        );
-
-
-      game.particles.push({
-
-        x,
-        y,
-
-        vx:
-          Math.cos(angle) *
-          speed,
-
-        vy:
-          Math.sin(angle) *
-          speed -
-          random(20, 80),
-
-        life:
-          random(0.35, 0.82),
-
-        maxLife:
-          0.82,
-
-        size:
-          random(1.5, 4),
-
-        color,
-
-        drag:
-          random(0.88, 0.96)
-
-      });
-
+    } catch (error) {
     }
 
-  }
+    event.preventDefault();
+  },
+  { passive: false }
+);
 
 
-  function addWave(
-    x,
-    y,
-    color,
-    radius
-  ) {
-
-    if (
-      game.waves.length >=
-      QUALITY.maxWaves
-    ) {
-
-      game.waves.shift();
-
-    }
-
-
-    game.waves.push({
-
-      x,
-      y,
-
-      color,
-
-      radius,
-
-      age: 0,
-
-      life: 0.48
-
-    });
-
-  }
-
-
-  /* ============================================================
-     SPAWN
-  ============================================================ */
-
-  function spawnItem(
-    type,
-    x
-  ) {
+canvas.addEventListener(
+  "pointermove",
+  function(event) {
 
     if (
-      game.items.length >=
-      QUALITY.maxItems
+      !game.input.pointerActive ||
+      game.state !== "playing"
     ) {
       return;
     }
 
+    setPointerX(
+      event.clientX
+    );
 
-    const baseSpeed =
-      random(138, 206) *
-      game.speed;
-
-
-    game.items.push({
-
-      type,
-
-      x,
-
-      baseX: x,
-
-      y: -30,
-
-      radius:
-        type === "virus"
-          ? random(13, 19)
-          : type === "shield"
-            ? 13
-            : random(9, 13),
-
-      speed:
-        type === "data"
-          ? baseSpeed *
-            random(0.88, 1.05)
-          : baseSpeed *
-            random(0.96, 1.18),
-
-      drift:
-        type === "virus"
-          ? random(10, 38)
-          : random(4, 18),
-
-      phase:
-        random(0, TAU),
-
-      age: 0,
-
-      rotation:
-        random(0, TAU),
-
-      spin:
-        type === "virus"
-          ? random(-4.8, 4.8)
-          : random(-2.4, 2.4),
-
-      value:
-        type === "data"
-          ? Math.round(
-              random(10, 17)
-            )
-          : 0
-
-    });
-
-  }
+    event.preventDefault();
+  },
+  { passive: false }
+);
 
 
-  function spawnWave() {
+function releasePointer() {
 
-    const margin = 34;
+  game.input.pointerActive =
+    false;
+}
 
+canvas.addEventListener(
+  "pointerup",
+  releasePointer,
+  { passive: true }
+);
 
-    const x =
-      random(
-        margin,
-        WIDTH - margin
-      );
-
-
-    const dangerChance =
-      clamp(
-        0.46 +
-        game.survival / 125,
-        0.46,
-        0.74
-      );
+canvas.addEventListener(
+  "pointercancel",
+  releasePointer,
+  { passive: true }
+);
 
 
-    const roll =
-      Math.random();
-
+window.addEventListener(
+  "keydown",
+  function(event) {
 
     if (
-      roll < 0.08 &&
-      game.survival > 8 &&
-      game.player.shield < 2
+      event.key === "ArrowLeft" ||
+      event.key === "a" ||
+      event.key === "A"
     ) {
 
-      spawnItem(
-        "shield",
-        x
-      );
+      game.input.left = true;
 
+      event.preventDefault();
     }
-
-    else if (
-      roll < dangerChance
-    ) {
-
-      spawnItem(
-        "virus",
-        x
-      );
-
-
-      if (
-        game.survival > 18 &&
-        Math.random() < 0.22
-      ) {
-
-        spawnItem(
-          "data",
-          clamp(
-            x +
-            random(-94, 94),
-            margin,
-            WIDTH - margin
-          )
-        );
-
-      }
-
-    }
-
-    else {
-
-      spawnItem(
-        "data",
-        x
-      );
-
-
-      if (
-        game.survival > 12 &&
-        Math.random() < 0.15
-      ) {
-
-        spawnItem(
-          "data",
-          clamp(
-            x +
-            random(-76, 76),
-            margin,
-            WIDTH - margin
-          )
-        );
-
-      }
-
-    }
-
 
     if (
-      game.survival > 28 &&
-      Math.random() < 0.08
+      event.key === "ArrowRight" ||
+      event.key === "d" ||
+      event.key === "D"
     ) {
 
-      spawnItem(
-        "virus",
+      game.input.right = true;
 
-        Math.random() < 0.5
-          ? random(margin, 150)
-          : random(
-              WIDTH - 150,
-              WIDTH - margin
-            )
-      );
-
+      event.preventDefault();
     }
-
   }
+);
 
 
-  /* ============================================================
-     COLLISIONS
-  ============================================================ */
-
-  function collectData(item) {
-
-    game.combo++;
-
-    game.comboTimer =
-      2.25;
-
-
-    game.multiplier =
-      1 +
-      Math.min(
-        4.2,
-        game.combo * 0.075
-      );
-
-
-    const points =
-      Math.round(
-        item.value *
-        game.multiplier +
-        game.speed * 4
-      );
-
-
-    game.score +=
-      points;
-
-
-    burst(
-      item.x,
-      item.y,
-      COLORS.green,
-
-      Math.min(
-        MOBILE_MODE ? 14 : 22,
-        14 + game.combo
-      ),
-
-      180
-    );
-
-
-    addWave(
-      item.x,
-      item.y,
-      COLORS.green,
-      44
-    );
-
-
-    addMessage(
-      "+" + points,
-      item.x,
-      item.y - 8,
-      COLORS.green
-    );
-
-
-    playSFX(
-      600,
-      0.06,
-      "triangle",
-      0.06,
-      900
-    );
-
-  }
-
-
-  function collectShield(item) {
-
-    game.player.shield =
-      clamp(
-        game.player.shield + 1,
-        0,
-        2
-      );
-
-
-    game.score +=
-      35;
-
-
-    burst(
-      item.x,
-      item.y,
-      COLORS.cyan,
-
-      MOBILE_MODE ? 16 : 26,
-
-      190
-    );
-
-
-    addWave(
-      item.x,
-      item.y,
-      COLORS.cyan,
-      56
-    );
-
-
-    addMessage(
-      "SHIELD",
-      item.x,
-      item.y - 10,
-      COLORS.cyan
-    );
-
-
-    playSFX(
-      420,
-      0.14,
-      "triangle",
-      0.06,
-      840
-    );
-
-  }
-
-
-  function hitVirus(item) {
-
-    burst(
-      item.x,
-      item.y,
-      COLORS.red,
-
-      MOBILE_MODE ? 24 : 42,
-
-      250
-    );
-
-
-    addWave(
-      item.x,
-      item.y,
-      COLORS.red,
-      88
-    );
-
-
-    game.shake =
-      13;
-
-
-    game.shakeTimer =
-      0.34;
-
-
-    game.flash =
-      0.28;
-
-
-    playSFX(
-      130,
-      0.22,
-      "sawtooth",
-      0.12,
-      45
-    );
-
+window.addEventListener(
+  "keyup",
+  function(event) {
 
     if (
-      game.player.invincible > 0 ||
-      game.player.shield > 0
+      event.key === "ArrowLeft" ||
+      event.key === "a" ||
+      event.key === "A"
     ) {
 
-      if (
-        game.player.shield > 0 &&
-        game.player.invincible <= 0
-      ) {
-
-        game.player.shield--;
-
-      }
-
-
-      game.score += 8;
-
-
-      addMessage(
-        "BLOCK",
-        item.x,
-        item.y - 10,
-        COLORS.yellow
-      );
-
-
-      return;
-
+      game.input.left = false;
     }
 
+    if (
+      event.key === "ArrowRight" ||
+      event.key === "d" ||
+      event.key === "D"
+    ) {
 
-    endGame();
+      game.input.right = false;
+    }
+  }
+);
 
+
+/* =========================================================
+   START / GAME OVER
+========================================================= */
+
+function startGame() {
+
+  resetGame();
+
+  forceInitialObstacles();
+
+  game.state =
+    "playing";
+
+  overlay.style.display =
+    "none";
+
+  lastFrameTime =
+    performance.now();
+}
+
+
+function gameOver() {
+
+  if (
+    game.state !== "playing"
+  ) {
+    return;
   }
 
+  game.state =
+    "gameover";
 
-  /* ============================================================
-     GAME OVER
-  ============================================================ */
+  burst(
+    game.player.x,
+    PLAYER_Y,
+    24
+  );
 
-  function endGame() {
+  const finalScore =
+    Math.floor(
+      game.score
+    );
 
-    game.state =
-      "gameover";
-
-
-    game.multiplier =
-      1;
-
+  if (
+    finalScore > game.best
+  ) {
 
     game.best =
-      Math.max(
-        game.best,
-        Math.floor(game.score)
+      finalScore;
+  }
+
+  updateHUD();
+
+  saveGame();
+
+  /*
+    Optional score submission
+  */
+
+  try {
+
+    if (
+      hasYTGame() &&
+      ytgame.game &&
+      typeof ytgame.game.sendScore === "function"
+    ) {
+
+      ytgame.game.sendScore(
+        finalScore
       );
+    }
+
+  } catch (error) {
+  }
+
+  title.textContent =
+    "GAME OVER";
+
+  message.innerHTML =
+    "Score: <b>" +
+    finalScore +
+    "</b><br>Best: <b>" +
+    Math.floor(game.best) +
+    "</b>";
+
+  startButton.textContent =
+    "PLAY AGAIN";
+
+  overlay.style.display =
+    "flex";
+}
 
 
-    saveGame();
+startButton.addEventListener(
+  "click",
+  function() {
 
-    sendScore();
-
-
-    game.shake =
-      18;
-
-
-    game.shakeTimer =
-      0.42;
+    startGame();
+  }
+);
 
 
-    playSFX(
-      310,
-      0.22,
-      "sawtooth",
-      0.08,
-      155
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function updateGame(dt) {
+
+  if (
+    game.state !== "playing"
+  ) {
+    return;
+  }
+
+  game.survival += dt;
+
+  game.speedScale =
+    1 +
+    Math.min(
+      1.8,
+      game.survival / 50
     );
 
 
-    updateHUD(true);
+  /*
+    INPUT
+  */
 
-    showGameOverMenu();
-
-  }
-
-
-  /* ============================================================
-     UPDATE GAME
-  ============================================================ */
-
-  function updateGame(dt) {
-
-    game.survival +=
-      dt;
-
-
-    game.speed =
-      1 +
-      Math.min(
-        1.85,
-        game.survival / 48
-      );
-
-
-    game.spawnTimer -=
-      dt;
-
-
-    if (
-      game.spawnTimer <= 0
-    ) {
-
-      spawnWave();
-
-
-      game.spawnTimer =
-        clamp(
-          0.72 -
-          game.survival * 0.006,
-          0.29,
-          0.72
-        ) *
-        random(
-          0.76,
-          1.14
-        );
-
-    }
-
-
-    /* PLAYER */
-
-    const player =
-      game.player;
-
+  if (
+    !game.input.pointerActive
+  ) {
 
     if (
       game.input.left
     ) {
 
-      player.targetX -=
-        380 * dt;
-
+      game.player.targetX -=
+        390 * dt;
     }
-
 
     if (
       game.input.right
     ) {
 
-      player.targetX +=
-        380 * dt;
-
+      game.player.targetX +=
+        390 * dt;
     }
+  }
+
+  game.player.targetX =
+    clamp(
+      game.player.targetX,
+      30,
+      LOGICAL_WIDTH - 30
+    );
 
 
-    player.targetX =
+  const previousX =
+    game.player.x;
+
+  game.player.x =
+    lerp(
+      game.player.x,
+      game.player.targetX,
+      1 -
+      Math.exp(-18 * dt)
+    );
+
+  game.player.lean =
+    lerp(
+      game.player.lean,
       clamp(
-        player.targetX,
-        30,
-        WIDTH - 30
-      );
-
-
-    const oldX =
-      player.x;
-
-
-    player.x =
-      lerp(
-        player.x,
-        player.targetX,
-        1 -
-        Math.exp(-14 * dt)
-      );
-
-
-    player.lean =
-      lerp(
-        player.lean,
-
-        clamp(
-          (player.x - oldX) *
-          0.62,
-
-          -13,
-          13
-        ),
-
-        1 -
-        Math.exp(-10 * dt)
-      );
-
-
-    player.invincible =
-      Math.max(
-        0,
-        player.invincible - dt
-      );
-
-
-    /* COMBO */
-
-    if (
-      game.comboTimer > 0
-    ) {
-
-      game.comboTimer -= dt;
-
-    }
-
-    else if (
-      game.combo > 0
-    ) {
-
-      game.combo =
-        Math.max(
-          0,
-          Math.floor(
-            game.combo * 0.55
-          )
-        );
-
-
-      game.multiplier =
-        1 +
-        Math.min(
-          4.2,
-          game.combo * 0.075
-        );
-
-    }
-
-
-    /* ITEMS */
-
-    for (
-      let i =
-        game.items.length - 1;
-
-      i >= 0;
-
-      i--
-    ) {
-
-      const item =
-        game.items[i];
-
-
-      item.age += dt;
-
-
-      item.y +=
-        item.speed * dt;
-
-
-      item.x =
-        item.baseX +
-        Math.sin(
-          item.age * 2.3 +
-          item.phase
-        ) *
-        item.drift;
-
-
-      item.rotation +=
-        item.spin * dt;
-
-
-      const dx =
-        item.x -
-        player.x;
-
-
-      const dy =
-        item.y -
-        PLAYER_Y;
-
-
-      const distanceSquared =
-        dx * dx +
-        dy * dy;
-
-
-      const collisionRadius =
-        player.radius +
-        item.radius;
-
-
-      if (
-        distanceSquared <
-        collisionRadius *
-        collisionRadius
-      ) {
-
-        if (
-          item.type ===
-          "data"
-        ) {
-
-          collectData(item);
-
-        }
-
-        else if (
-          item.type ===
-          "shield"
-        ) {
-
-          collectShield(item);
-
-        }
-
-        else {
-
-          hitVirus(item);
-
-        }
-
-
-        game.items.splice(
-          i,
-          1
-        );
-
-
-        continue;
-
-      }
-
-
-      if (
-        item.y >
-        HEIGHT + 40
-      ) {
-
-        game.items.splice(
-          i,
-          1
-        );
-
-      }
-
-    }
-
-
-    updateHUD();
-
-  }
-
-
-  /* ============================================================
-     UPDATE EFFECTS
-  ============================================================ */
-
-  function updateEffects(dt) {
-
-    for (
-      const star of
-      game.stars
-    ) {
-
-      star.y +=
-        star.speed *
         (
-          game.state ===
-          "playing"
-            ? game.speed
-            : 0.5
-        ) *
-        dt;
-
-
-      if (
-        star.y >
-        HEIGHT + 4
-      ) {
-
-        star.y =
-          -4;
-
-
-        star.x =
-          random(0, WIDTH);
-
-      }
-
-    }
-
-
-    /* PARTICLES */
-
-    for (
-      let i =
-        game.particles.length - 1;
-
-      i >= 0;
-
-      i--
-    ) {
-
-      const particle =
-        game.particles[i];
-
-
-      particle.life -=
-        dt;
-
-
-      if (
-        particle.life <= 0
-      ) {
-
-        game.particles.splice(
-          i,
-          1
-        );
-
-        continue;
-
-      }
-
-
-      const drag =
-        Math.pow(
-          particle.drag,
-          dt * 60
-        );
-
-
-      particle.vx *=
-        drag;
-
-
-      particle.vy =
-        particle.vy *
-        drag +
-        120 * dt;
-
-
-      particle.x +=
-        particle.vx * dt;
-
-
-      particle.y +=
-        particle.vy * dt;
-
-    }
-
-
-    /* WAVES */
-
-    for (
-      let i =
-        game.waves.length - 1;
-
-      i >= 0;
-
-      i--
-    ) {
-
-      const wave =
-        game.waves[i];
-
-
-      wave.age +=
-        dt;
-
-
-      if (
-        wave.age >=
-        wave.life
-      ) {
-
-        game.waves.splice(
-          i,
-          1
-        );
-
-      }
-
-    }
-
-
-    /* MESSAGES */
-
-    for (
-      let i =
-        game.messages.length - 1;
-
-      i >= 0;
-
-      i--
-    ) {
-
-      const message =
-        game.messages[i];
-
-
-      message.life -=
-        dt;
-
-
-      if (
-        message.life <= 0
-      ) {
-
-        game.messages.splice(
-          i,
-          1
-        );
-
-      }
-
-      else {
-
-        message.y +=
-          message.velocityY *
-          dt;
-
-      }
-
-    }
-
-
-    /* SHAKE */
-
-    if (
-      game.shakeTimer > 0
-    ) {
-
-      game.shakeTimer -=
-        dt;
-
-
-      game.shake *=
-        Math.pow(
-          0.84,
-          dt * 60
-        );
-
-    }
-
-    else {
-
-      game.shake = 0;
-
-    }
-
-
-    game.flash =
-      Math.max(
-        0,
-        game.flash -
-        dt * 1.9
-      );
-
-  }
-
-
-  /* ============================================================
-     STARS
-  ============================================================ */
-
-  function buildStars() {
-
-    game.stars.length =
-      0;
-
-
-    for (
-      let i = 0;
-
-      i < QUALITY.stars;
-
-      i++
-    ) {
-
-      game.stars.push({
-
-        x:
-          random(0, WIDTH),
-
-        y:
-          random(0, HEIGHT),
-
-        speed:
-          random(12, 56),
-
-        size:
-          random(0.6, 1.8),
-
-        color:
-          Math.random() < 0.5
-            ? COLORS.cyan
-            : COLORS.pink
-
-      });
-
-    }
-
-  }
-
-
-  /* ============================================================
-     DRAW HELPERS
-  ============================================================ */
-
-  const backgroundGradient =
-    (() => {
-
-      const gradient =
-        ctx.createLinearGradient(
-          0,
-          0,
-          0,
-          HEIGHT
-        );
-
-
-      gradient.addColorStop(
-        0,
-        "#060712"
-      );
-
-
-      gradient.addColorStop(
-        0.52,
-        "#090b1f"
-      );
-
-
-      gradient.addColorStop(
-        1,
-        "#04050d"
-      );
-
-
-      return gradient;
-
-    })();
-
-
-  function setGameTransform() {
-
-    const scaleX =
-      canvas.width /
-      WIDTH;
-
-
-    const scaleY =
-      canvas.height /
-      HEIGHT;
-
-
-    let shakeX = 0;
-    let shakeY = 0;
-
-
-    if (
-      game.shakeTimer > 0
-    ) {
-
-      shakeX =
-        random(
-          -game.shake,
-          game.shake
-        );
-
-
-      shakeY =
-        random(
-          -game.shake,
-          game.shake
-        );
-
-    }
-
-
-    ctx.setTransform(
-      scaleX,
-      0,
-      0,
-      scaleY,
-
-      shakeX *
-      scaleX,
-
-      shakeY *
-      scaleY
-    );
-
-  }
-
-
-  /* ============================================================
-     DRAW BACKGROUND
-  ============================================================ */
-
-  function drawBackground(time) {
-
-    ctx.fillStyle =
-      backgroundGradient;
-
-
-    ctx.fillRect(
-      0,
-      0,
-      WIDTH,
-      HEIGHT
+          game.player.x -
+          previousX
+        ) * 0.75,
+        -14,
+        14
+      ),
+      1 -
+      Math.exp(-12 * dt)
     );
 
 
-    ctx.save();
+  game.player.invincible =
+    Math.max(
+      0,
+      game.player.invincible - dt
+    );
 
 
-    ctx.globalCompositeOperation =
-      "lighter";
+  /*
+    SPAWN
+  */
+
+  game.spawnTimer -= dt;
+
+  const spawnDelay =
+    clamp(
+      0.82 -
+      game.survival * 0.007,
+      0.32,
+      0.82
+    );
+
+  while (
+    game.spawnTimer <= 0
+  ) {
+
+    spawnWave();
+
+    game.spawnTimer +=
+      spawnDelay *
+      rand(0.85, 1.1);
+  }
 
 
-    for (
-      const star of
-      game.stars
-    ) {
+  /*
+    ITEMS
+  */
 
-      ctx.globalAlpha =
-        0.35;
+  const player =
+    game.player;
 
+  for (
+    let i =
+      game.items.length - 1;
 
-      ctx.fillStyle =
-        star.color;
+    i >= 0;
 
+    i--
+  ) {
 
-      ctx.fillRect(
-        star.x,
-        star.y,
-        star.size,
-        star.size
-      );
+    const item =
+      game.items[i];
 
-    }
+    item.age += dt;
 
+    item.y +=
+      item.speed * dt;
 
-    ctx.restore();
+    item.x =
+      item.baseX +
+      Math.sin(
+        item.age * 2.1 +
+        item.phase
+      ) *
+      item.drift;
+
+    item.rot +=
+      item.spin * dt;
 
 
     /*
-      Lightweight perspective grid
+      COLLISION
     */
 
-    const horizon =
-      185;
+    const hitDistance =
+      player.radius +
+      item.radius;
+
+    const distSq =
+      distanceSquared(
+        item.x,
+        item.y,
+        player.x,
+        PLAYER_Y
+      );
 
 
-    const spacing =
-      37;
-
-
-    const offset =
-      (
-        time *
-        70 *
-        (
-          game.state ===
-          "playing"
-            ? game.speed
-            : 0.6
-        )
-      ) %
-      spacing;
-
-
-    ctx.save();
-
-
-    ctx.lineWidth = 1;
-
-
-    for (
-      let y =
-        horizon + offset;
-
-      y <
-        HEIGHT + spacing;
-
-      y += spacing
+    if (
+      distSq <
+      hitDistance * hitDistance
     ) {
 
-      ctx.globalAlpha =
-        clamp(
-          (y - horizon) /
-          (HEIGHT - horizon) *
-          0.35,
+      if (
+        item.type === "data"
+      ) {
 
-          0.05,
-          0.35
+        game.score +=
+          item.value;
+
+        burst(
+          item.x,
+          item.y,
+          10
         );
 
+        game.items.splice(
+          i,
+          1
+        );
 
-      ctx.strokeStyle =
-        COLORS.cyan;
+        continue;
+      }
 
 
-      ctx.beginPath();
+      if (
+        item.type === "shield"
+      ) {
 
-      ctx.moveTo(
-        0,
-        y
-      );
+        player.shield =
+          Math.min(
+            1,
+            player.shield + 1
+          );
 
-      ctx.lineTo(
-        WIDTH,
-        y
-      );
+        game.items.splice(
+          i,
+          1
+        );
 
-      ctx.stroke();
+        continue;
+      }
 
+
+      if (
+        item.type === "virus"
+      ) {
+
+        if (
+          player.invincible > 0
+        ) {
+
+          game.items.splice(
+            i,
+            1
+          );
+
+          continue;
+        }
+
+
+        if (
+          player.shield > 0
+        ) {
+
+          player.shield--;
+
+          burst(
+            item.x,
+            item.y,
+            20
+          );
+
+          game.items.splice(
+            i,
+            1
+          );
+
+          continue;
+        }
+
+
+        game.items.splice(
+          i,
+          1
+        );
+
+        gameOver();
+
+        return;
+      }
     }
 
 
-    for (
-      let i = -5;
+    /*
+      REMOVE OFFSCREEN
+    */
 
-      i <= 5;
-
-      i++
+    if (
+      item.y >
+      LOGICAL_HEIGHT +
+      item.radius +
+      60
     ) {
 
-      ctx.globalAlpha =
-        0.14;
-
-
-      ctx.strokeStyle =
-        i % 2
-          ? COLORS.cyan
-          : COLORS.pink;
-
-
-      ctx.beginPath();
-
-
-      ctx.moveTo(
-        WIDTH / 2 +
-        i * 9,
-        horizon
+      game.items.splice(
+        i,
+        1
       );
-
-
-      ctx.lineTo(
-        WIDTH / 2 +
-        i * 70,
-        HEIGHT
-      );
-
-
-      ctx.stroke();
-
     }
-
-
-    ctx.restore();
-
   }
 
 
-  /* ============================================================
-     DRAW ITEM
-  ============================================================ */
+  /*
+    PARTICLES
+  */
 
-  function drawItem(
-    item
+  for (
+    let i =
+      game.particles.length - 1;
+
+    i >= 0;
+
+    i--
   ) {
 
-    ctx.save();
+    const particle =
+      game.particles[i];
 
+    particle.life -= dt;
 
-    ctx.translate(
-      item.x,
-      item.y
-    );
+    particle.x +=
+      particle.vx * dt;
 
+    particle.y +=
+      particle.vy * dt;
 
-    ctx.rotate(
-      item.rotation
-    );
+    particle.vx *=
+      1 - dt * 1.8;
 
-
-    ctx.globalCompositeOperation =
-      "lighter";
-
+    particle.vy *=
+      1 - dt * 1.8;
 
     if (
-      item.type ===
-      "data"
+      particle.life <= 0
     ) {
 
-      ctx.strokeStyle =
-        COLORS.green;
-
-
-      ctx.fillStyle =
-        "rgba(109,255,115,0.22)";
-
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        0,
-        -item.radius * 1.35
+      game.particles.splice(
+        i,
+        1
       );
-
-      ctx.lineTo(
-        item.radius * 1.15,
-        0
-      );
-
-      ctx.lineTo(
-        0,
-        item.radius * 1.35
-      );
-
-      ctx.lineTo(
-        -item.radius * 1.15,
-        0
-      );
-
-      ctx.closePath();
-
-
-      ctx.fill();
-
-      ctx.stroke();
-
     }
-
-
-    else if (
-      item.type ===
-      "shield"
-    ) {
-
-      ctx.strokeStyle =
-        COLORS.cyan;
-
-
-      ctx.fillStyle =
-        "rgba(18,247,255,0.16)";
-
-
-      ctx.beginPath();
-
-
-      for (
-        let i = 0;
-
-        i < 6;
-
-        i++
-      ) {
-
-        const angle =
-          -Math.PI / 2 +
-          i *
-          TAU / 6;
-
-
-        const x =
-          Math.cos(angle) *
-          item.radius *
-          1.45;
-
-
-        const y =
-          Math.sin(angle) *
-          item.radius *
-          1.45;
-
-
-        if (i === 0) {
-
-          ctx.moveTo(x, y);
-
-        } else {
-
-          ctx.lineTo(x, y);
-
-        }
-
-      }
-
-
-      ctx.closePath();
-
-      ctx.fill();
-
-      ctx.stroke();
-
-    }
-
-
-    else {
-
-      ctx.strokeStyle =
-        COLORS.red;
-
-
-      ctx.fillStyle =
-        "rgba(255,49,93,0.28)";
-
-
-      ctx.beginPath();
-
-
-      for (
-        let i = 0;
-
-        i < 18;
-
-        i++
-      ) {
-
-        const radius =
-          i % 2
-            ? item.radius * 0.72
-            : item.radius * 1.45;
-
-
-        const angle =
-          i *
-          Math.PI / 9;
-
-
-        const x =
-          Math.cos(angle) *
-          radius;
-
-
-        const y =
-          Math.sin(angle) *
-          radius;
-
-
-        if (i === 0) {
-
-          ctx.moveTo(x, y);
-
-        } else {
-
-          ctx.lineTo(x, y);
-
-        }
-
-      }
-
-
-      ctx.closePath();
-
-      ctx.fill();
-
-      ctx.stroke();
-
-    }
-
-
-    ctx.restore();
-
   }
 
 
-  /* ============================================================
-     DRAW PARTICLES
-     BEZ shadowBlur
-     BEZ save/restore na particle
-  ============================================================ */
+  /*
+    SCORE
+  */
 
-  function drawParticles() {
+  game.score +=
+    dt * 10;
 
-    ctx.save();
+  if (
+    game.score >
+    game.best
+  ) {
 
-
-    ctx.globalCompositeOperation =
-      "lighter";
-
-
-    for (
-      const particle of
-      game.particles
-    ) {
-
-      ctx.globalAlpha =
-        clamp(
-          particle.life /
-          particle.maxLife,
-          0,
-          1
-        );
-
-
-      ctx.fillStyle =
-        particle.color;
-
-
-      ctx.fillRect(
-        particle.x -
-        particle.size / 2,
-
-        particle.y -
-        particle.size / 2,
-
-        particle.size,
-        particle.size
+    game.best =
+      Math.floor(
+        game.score
       );
-
-    }
-
-
-    ctx.restore();
-
   }
 
+  updateHUD();
+}
 
-  /* ============================================================
-     DRAW WAVES
-  ============================================================ */
 
-  function drawWaves() {
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
 
-    ctx.save();
+function drawBackground() {
 
+  ctx.fillStyle =
+    "#071018";
 
-    ctx.globalCompositeOperation =
-      "lighter";
+  ctx.fillRect(
+    0,
+    0,
+    LOGICAL_WIDTH,
+    LOGICAL_HEIGHT
+  );
 
 
-    for (
-      const wave of
-      game.waves
-    ) {
+  /*
+    Moving grid
+  */
 
-      const progress =
-        clamp(
-          wave.age /
-          wave.life,
-          0,
-          1
-        );
+  ctx.strokeStyle =
+    "rgba(70,255,170,0.05)";
 
+  ctx.lineWidth = 1;
 
-      ctx.globalAlpha =
-        (1 - progress) *
-        0.72;
+  const gridOffset =
+    (
+      game.time * 45
+    ) % 40;
 
+  for (
+    let y =
+      -40 + gridOffset;
 
-      ctx.lineWidth =
-        2 +
-        progress * 4;
+    y <
+      LOGICAL_HEIGHT;
 
-
-      ctx.strokeStyle =
-        wave.color;
-
-
-      ctx.beginPath();
-
-
-      ctx.arc(
-        wave.x,
-        wave.y,
-
-        wave.radius *
-        easeOut(progress),
-
-        0,
-        TAU
-      );
-
-
-      ctx.stroke();
-
-    }
-
-
-    ctx.restore();
-
-  }
-
-
-  /* ============================================================
-     DRAW PLAYER
-  ============================================================ */
-
-  function drawPlayer(time) {
-
-    const player =
-      game.player;
-
-
-    ctx.save();
-
-
-    ctx.translate(
-      player.x,
-      PLAYER_Y
-    );
-
-
-    ctx.rotate(
-      player.lean *
-      0.018
-    );
-
-
-    ctx.globalCompositeOperation =
-      "lighter";
-
-
-    if (
-      player.shield > 0 ||
-      player.invincible > 0
-    ) {
-
-      ctx.globalAlpha =
-        0.65;
-
-
-      ctx.strokeStyle =
-        player.shield > 0
-          ? COLORS.yellow
-          : COLORS.cyan;
-
-
-      ctx.lineWidth =
-        3;
-
-
-      ctx.beginPath();
-
-
-      ctx.arc(
-        0,
-        0,
-        player.radius + 10,
-        0,
-        TAU
-      );
-
-
-      ctx.stroke();
-
-    }
-
-
-    if (
-      player.invincible > 0
-    ) {
-
-      const pulse =
-        Math.sin(time * 22) *
-        0.5 +
-        0.5;
-
-
-      ctx.globalAlpha =
-        0.6 +
-        pulse * 0.4;
-
-    }
-
-
-    ctx.fillStyle =
-      "rgba(18,247,255,0.22)";
-
-
-    ctx.strokeStyle =
-      COLORS.cyan;
-
-
-    ctx.lineWidth =
-      4;
-
+    y += 40
+  ) {
 
     ctx.beginPath();
-
 
     ctx.moveTo(
       0,
-      -player.radius - 12
+      y
     );
 
-
-    ctx.bezierCurveTo(
-      player.radius + 17,
-      -player.radius - 14,
-
-      player.radius + 19,
-      player.radius + 6,
-
-      0,
-      player.radius + 14
+    ctx.lineTo(
+      LOGICAL_WIDTH,
+      y
     );
-
-
-    ctx.bezierCurveTo(
-      -player.radius - 19,
-      player.radius + 6,
-
-      -player.radius - 17,
-      -player.radius - 14,
-
-      0,
-      -player.radius - 12
-    );
-
-
-    ctx.closePath();
-
-
-    ctx.fill();
 
     ctx.stroke();
+  }
 
+
+  for (
+    let x = 0;
+
+    x <= LOGICAL_WIDTH;
+
+    x += 40
+  ) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      x,
+      0
+    );
+
+    ctx.lineTo(
+      x,
+      LOGICAL_HEIGHT
+    );
+
+    ctx.stroke();
+  }
+}
+
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer() {
+
+  const p =
+    game.player;
+
+  const blink =
+    p.invincible > 0 &&
+    Math.floor(
+      game.time * 14
+    ) % 2 === 0;
+
+  if (blink) {
+    return;
+  }
+
+  ctx.save();
+
+  ctx.translate(
+    p.x,
+    PLAYER_Y
+  );
+
+  ctx.rotate(
+    p.lean * 0.015
+  );
+
+
+  /*
+    Shield
+  */
+
+  if (
+    p.shield > 0
+  ) {
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      0,
+      32,
+      0,
+      Math.PI * 2
+    );
 
     ctx.strokeStyle =
-      COLORS.pink;
+      "rgba(90,220,255,0.9)";
 
-
-    ctx.lineWidth =
-      2;
-
-
-    ctx.beginPath();
-
-
-    ctx.arc(
-      0,
-      2,
-      player.radius * 0.82,
-      Math.PI * 0.08,
-      Math.PI * 0.92,
-      true
-    );
-
+    ctx.lineWidth = 3;
 
     ctx.stroke();
+  }
 
 
-    ctx.fillStyle =
-      COLORS.white;
+  /*
+    Ship
+  */
 
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    -26
+  );
+
+  ctx.lineTo(
+    22,
+    22
+  );
+
+  ctx.lineTo(
+    0,
+    14
+  );
+
+  ctx.lineTo(
+    -22,
+    22
+  );
+
+  ctx.closePath();
+
+  ctx.fillStyle =
+    "#66f7b2";
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    "#d9fff0";
+
+  ctx.lineWidth = 2;
+
+  ctx.stroke();
+
+
+  /*
+    Engine
+  */
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    -8,
+    18
+  );
+
+  ctx.lineTo(
+    0,
+    34 +
+    Math.sin(game.time * 18) * 4
+  );
+
+  ctx.lineTo(
+    8,
+    18
+  );
+
+  ctx.closePath();
+
+  ctx.fillStyle =
+    "#2cdcff";
+
+  ctx.fill();
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   DRAW VIRUS
+========================================================= */
+
+function drawVirus(
+  item
+) {
+
+  ctx.save();
+
+  ctx.translate(
+    item.x,
+    item.y
+  );
+
+  ctx.rotate(
+    item.rot
+  );
+
+
+  /*
+    Glow
+  */
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    item.radius * 1.25,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    "rgba(255,55,85,0.15)";
+
+  ctx.fill();
+
+
+  /*
+    Spikes
+  */
+
+  ctx.strokeStyle =
+    "#ff4863";
+
+  ctx.lineWidth = 3;
+
+  for (
+    let i = 0;
+
+    i < 8;
+
+    i++
+  ) {
+
+    const angle =
+      i *
+      Math.PI * 2 / 8;
+
+    const x1 =
+      Math.cos(angle) *
+      item.radius;
+
+    const y1 =
+      Math.sin(angle) *
+      item.radius;
+
+    const x2 =
+      Math.cos(angle) *
+      item.radius * 1.35;
+
+    const y2 =
+      Math.sin(angle) *
+      item.radius * 1.35;
 
     ctx.beginPath();
 
-
-    ctx.arc(
-      -7,
-      -2,
-      3,
-      0,
-      TAU
+    ctx.moveTo(
+      x1,
+      y1
     );
 
-
-    ctx.arc(
-      7,
-      -2,
-      3,
-      0,
-      TAU
+    ctx.lineTo(
+      x2,
+      y2
     );
 
-
-    ctx.fill();
-
-
-    ctx.restore();
-
+    ctx.stroke();
   }
 
 
-  /* ============================================================
-     DRAW MESSAGES
-  ============================================================ */
+  /*
+    Body
+  */
 
-  function drawMessages() {
+  ctx.beginPath();
 
-    ctx.save();
+  ctx.arc(
+    0,
+    0,
+    item.radius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    "#c82645";
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    "#ff91a3";
+
+  ctx.lineWidth = 2;
+
+  ctx.stroke();
 
 
-    ctx.textAlign =
-      "center";
+  /*
+    Eyes
+  */
+
+  ctx.fillStyle =
+    "#081018";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    -item.radius * 0.32,
+    -item.radius * 0.1,
+    item.radius * 0.14,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.arc(
+    item.radius * 0.32,
+    -item.radius * 0.1,
+    item.radius * 0.14,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+}
 
 
-    ctx.textBaseline =
-      "middle";
+/* =========================================================
+   DRAW DATA
+========================================================= */
+
+function drawData(
+  item
+) {
+
+  ctx.save();
+
+  ctx.translate(
+    item.x,
+    item.y
+  );
+
+  ctx.rotate(
+    item.rot
+  );
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    -item.radius * 1.4
+  );
+
+  ctx.lineTo(
+    item.radius * 1.2,
+    0
+  );
+
+  ctx.lineTo(
+    0,
+    item.radius * 1.4
+  );
+
+  ctx.lineTo(
+    -item.radius * 1.2,
+    0
+  );
+
+  ctx.closePath();
+
+  ctx.fillStyle =
+    "rgba(90,255,150,0.35)";
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    "#72ffb0";
+
+  ctx.lineWidth = 2;
+
+  ctx.stroke();
+
+  ctx.restore();
+}
 
 
-    ctx.font =
-      "900 20px system-ui";
+/* =========================================================
+   DRAW SHIELD
+========================================================= */
+
+function drawShield(
+  item
+) {
+
+  ctx.save();
+
+  ctx.translate(
+    item.x,
+    item.y
+  );
+
+  ctx.rotate(
+    item.rot
+  );
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    item.radius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.strokeStyle =
+    "#4bdcff";
+
+  ctx.lineWidth = 3;
+
+  ctx.stroke();
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    item.radius * 0.55,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    "rgba(70,220,255,0.35)";
+
+  ctx.fill();
+
+  ctx.restore();
+}
 
 
-    for (
-      const message of
-      game.messages
+/* =========================================================
+   DRAW ITEMS
+========================================================= */
+
+function drawItems() {
+
+  for (
+    let i = 0;
+
+    i < game.items.length;
+
+    i++
+  ) {
+
+    const item =
+      game.items[i];
+
+    if (
+      item.type === "virus"
     ) {
 
-      ctx.globalAlpha =
-        clamp(
-          message.life /
-          message.maxLife,
-          0,
-          1
-        );
+      drawVirus(item);
 
+    } else if (
+      item.type === "data"
+    ) {
 
-      ctx.fillStyle =
-        message.color;
+      drawData(item);
 
+    } else {
 
-      ctx.fillText(
-        message.text,
-        message.x,
-        message.y
-      );
-
+      drawShield(item);
     }
-
-
-    ctx.restore();
-
   }
+}
 
 
-  /* ============================================================
-     TELEMETRY
-  ============================================================ */
+/* =========================================================
+   DRAW PARTICLES
+========================================================= */
 
-  function drawTelemetry() {
+function drawParticles() {
 
-    const progress =
+  for (
+    let i = 0;
+
+    i < game.particles.length;
+
+    i++
+  ) {
+
+    const p =
+      game.particles[i];
+
+    const alpha =
       clamp(
-        game.survival / 60,
+        p.life / p.maxLife,
         0,
         1
       );
 
-
-    const y =
-      HEIGHT - 24;
-
-
-    ctx.save();
-
-
     ctx.globalAlpha =
-      0.8;
-
-
-    ctx.fillStyle =
-      "rgba(255,255,255,0.10)";
-
-
-    ctx.fillRect(
-      34,
-      y,
-      WIDTH - 68,
-      5
-    );
-
+      alpha;
 
     ctx.fillStyle =
-      COLORS.cyan;
-
+      "#8dffbd";
 
     ctx.fillRect(
-      34,
-      y,
-
-      (WIDTH - 68) *
-      progress,
-
-      5
+      p.x - p.size * 0.5,
+      p.y - p.size * 0.5,
+      p.size,
+      p.size
     );
-
-
-    if (
-      game.state ===
-      "playing"
-    ) {
-
-      ctx.fillStyle =
-        COLORS.yellow;
-
-
-      ctx.font =
-        "900 12px system-ui";
-
-
-      ctx.textAlign =
-        "center";
-
-
-      ctx.fillText(
-        Math.floor(
-          game.survival
-        ) + "s",
-
-        WIDTH / 2,
-
-        y - 8
-      );
-
-    }
-
-
-    ctx.restore();
-
   }
 
-
-  /* ============================================================
-     DRAW
-  ============================================================ */
-
-  function draw(time) {
-
-    /*
-      Resize tylko gdy faktycznie
-      zmienił się rozmiar.
-    */
-
-    resizeCanvas();
+  ctx.globalAlpha = 1;
+}
 
 
-    setGameTransform();
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  ctx.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width / dpr,
+    canvas.height / dpr
+  );
 
 
-    drawBackground(
-      time
+  ctx.save();
+
+  ctx.translate(
+    offsetX,
+    offsetY
+  );
+
+  ctx.scale(
+    scale,
+    scale
+  );
+
+  drawBackground();
+
+  drawItems();
+
+  drawParticles();
+
+  drawPlayer();
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+let lastHUDScore = -1;
+let lastHUDBest = -1;
+
+function updateHUD() {
+
+  const score =
+    Math.floor(
+      game.score
     );
 
-
-    for (
-      const item of
-      game.items
-    ) {
-
-      drawItem(item);
-
-    }
-
-
-    drawParticles();
-
-    drawWaves();
-
-    drawPlayer(time);
-
-    drawMessages();
-
-    drawTelemetry();
-
-
-    if (
-      game.flash > 0
-    ) {
-
-      ctx.globalAlpha =
-        Math.min(
-          0.32,
-          game.flash
-        );
-
-
-      ctx.fillStyle =
-        COLORS.red;
-
-
-      ctx.fillRect(
-        0,
-        0,
-        WIDTH,
-        HEIGHT
-      );
-
-    }
-
-
-    ctx.setTransform(
-      1,
-      0,
-      0,
-      1,
-      0,
-      0
+  const best =
+    Math.floor(
+      game.best
     );
 
-  }
-
-
-  /* ============================================================
-     GAME LOOP
-  ============================================================ */
-
-  let lastFrame =
-    performance.now();
-
-
-  function frame(now) {
-
-    /*
-      Limit dt.
-      Chroni przed ogromnym skokiem
-      po lagach / zmianie karty.
-    */
-
-    const dt =
-      Math.min(
-        0.033,
-        (now - lastFrame) / 1000
-      );
-
-
-    lastFrame =
-      now;
-
-
-    if (
-      game.state ===
-      "playing" &&
-      !game.adActive
-    ) {
-
-      updateGame(dt);
-
-    }
-
-
-    updateEffects(dt);
-
-
-    draw(
-      now / 1000
-    );
-
-
-    notifyFirstFrameReady();
-
-
-    requestAnimationFrame(
-      frame
-    );
-
-  }
-
-
-  /* ============================================================
-     INPUT
-  ============================================================ */
-
-  function clientToGameX(
-    clientX
+  if (
+    score !== lastHUDScore
   ) {
 
-    return clamp(
+    lastHUDScore =
+      score;
 
-      (
-        (clientX - canvasRect.left) /
-        canvasRect.width
-      ) *
-      WIDTH,
-
-      30,
-
-      WIDTH - 30
-
-    );
-
+    scoreElement.textContent =
+      score;
   }
 
-
-  function handlePointer(
-    event
+  if (
+    best !== lastHUDBest
   ) {
 
-    if (
-      game.state !==
-      "playing"
-    ) {
-      return;
-    }
+    lastHUDBest =
+      best;
+
+    bestElement.textContent =
+      best;
+  }
+}
 
 
-    event.preventDefault();
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+let lastFrameTime =
+  performance.now();
+
+function gameLoop(now) {
+
+  requestAnimationFrame(
+    gameLoop
+  );
 
 
-    game.player.targetX =
-      clientToGameX(
-        event.clientX
-      );
-
+  if (
+    game.pausedByYouTube
+  ) {
+    return;
   }
 
 
-  canvas.addEventListener(
-    "pointerdown",
-
-    event => {
-
-      unlockAudio();
-
-      handlePointer(event);
-
-    },
-
-    {
-      passive: false
-    }
-  );
-
-
-  canvas.addEventListener(
-    "pointermove",
-
-    handlePointer,
-
-    {
-      passive: false
-    }
-  );
-
-
-  /* ============================================================
-     KEYBOARD
-  ============================================================ */
-
-  window.addEventListener(
-    "keydown",
-
-    event => {
-
-      const key =
-        event.key.toLowerCase();
-
-
-      if (
-        key === "arrowleft" ||
-        key === "a"
-      ) {
-
-        game.input.left =
-          true;
-
-        event.preventDefault();
-
-      }
-
-
-      if (
-        key === "arrowright" ||
-        key === "d"
-      ) {
-
-        game.input.right =
-          true;
-
-        event.preventDefault();
-
-      }
-
-
-      if (
-        key === " " ||
-        key === "enter"
-      ) {
-
-        if (
-          game.state ===
-          "menu"
-        ) {
-
-          startGame();
-
-        }
-
-        else if (
-          game.state ===
-          "playing" ||
-          game.state ===
-          "paused"
-        ) {
-
-          togglePause();
-
-        }
-
-
-        event.preventDefault();
-
-      }
-
-
-      if (
-        key === "m"
-      ) {
-
-        audio.enabled =
-          !audio.enabled;
-
-
-        if (
-          !audio.enabled
-        ) {
-
-          stopMusic();
-
-        }
-
-        else {
-
-          unlockAudio();
-
-        }
-
-
-        updateSoundButton();
-
-      }
-
-    }
-  );
-
-
-  window.addEventListener(
-    "keyup",
-
-    event => {
-
-      const key =
-        event.key.toLowerCase();
-
-
-      if (
-        key === "arrowleft" ||
-        key === "a"
-      ) {
-
-        game.input.left =
-          false;
-
-      }
-
-
-      if (
-        key === "arrowright" ||
-        key === "d"
-      ) {
-
-        game.input.right =
-          false;
-
-      }
-
-    }
-  );
-
-
-  /* ============================================================
-     BUTTONS
-  ============================================================ */
-
-  soundBtn.addEventListener(
-    "click",
-
-    () => {
-
-      audio.enabled =
-        !audio.enabled;
-
-
-      if (
-        !audio.enabled
-      ) {
-
-        stopMusic();
-
-      }
-
-      else {
-
-        unlockAudio();
-
-      }
-
-
-      updateSoundButton();
-
-    }
-  );
-
-
-  pauseBtn.addEventListener(
-    "click",
-
-    togglePause
-  );
-
-
-  /* ============================================================
-     VISIBILITY
-  ============================================================ */
-
-  document.addEventListener(
-    "visibilitychange",
-
-    () => {
-
-      if (
-        document.hidden
-      ) {
-
-        if (
-          game.state ===
-          "playing"
-        ) {
-
-          game.state =
-            "paused";
-
-
-          game.systemPaused =
-            true;
-
-        }
-
-
-        saveGame();
-
-        suspendAudio();
-
-      }
-
-      else if (
-
-        game.systemPaused &&
-
-        game.state ===
-        "paused"
-
-      ) {
-
-        game.systemPaused =
-          false;
-
-
-        showPauseMenu();
-
-      }
-
-    }
-  );
-
-
-  /* ============================================================
-     ERRORS
-  ============================================================ */
-
-  window.addEventListener(
-    "error",
-
-    event => {
-
-      reportError(
-        event.error ||
-        event.message
-      );
-
-    }
-  );
-
-
-  window.addEventListener(
-    "unhandledrejection",
-
-    event => {
-
-      reportError(
-        event.reason
-      );
-
-    }
-  );
-
-
-  /* ============================================================
-     BOOT
-  ============================================================ */
-
-  async function boot() {
-
-    buildStars();
-
-
-    updateCanvasRect();
-
-    resizeCanvas();
-
-
-    initSDKHooks();
-
-
-    await loadSave();
-
-
-    updateSoundButton();
-
-    updateHUD(true);
-
-
-    showMenu();
-
-
-    draw(
-      performance.now() / 1000
+  let dt =
+    (
+      now -
+      lastFrameTime
+    ) / 1000;
+
+  lastFrameTime =
+    now;
+
+  /*
+    Prevent giant simulation jumps.
+  */
+
+  dt =
+    Math.min(
+      dt,
+      0.05
     );
 
+  game.time += dt;
 
-    /*
-      YouTube Playables:
-      pierwszy frame gotowy
-    */
+  updateGame(dt);
 
-    notifyFirstFrameReady();
+  render();
 
-
-    /*
-      Gra gotowa
-    */
-
-    notifyGameReady();
+  sendFirstFrameReady();
+}
 
 
-    requestAnimationFrame(
-      frame
-    );
+/* =========================================================
+   INITIALIZATION
+========================================================= */
 
-  }
+async function initialize() {
+
+  setupYouTubeCallbacks();
+
+  await loadGame();
+
+  title.textContent =
+    "CYBER DODGE";
+
+  message.innerHTML =
+    "Move left and right.<br>Avoid the red viruses.";
+
+  startButton.textContent =
+    "START GAME";
+
+  updateHUD();
+
+  /*
+    First visible frame will be rendered by game loop.
+  */
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+  /*
+    Menu is immediately interactive.
+  */
+
+  requestAnimationFrame(
+    function() {
+
+      sendGameReady();
+    }
+  );
+}
 
 
-  boot()
-    .catch(
-      error => {
+initialize();
 
-        reportError(error);
-
-        showMenu();
-
-        requestAnimationFrame(
-          frame
-        );
-
-      }
-    );
-
-})();
 </script>
 
 </body>
