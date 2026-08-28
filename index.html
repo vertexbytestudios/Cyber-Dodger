@@ -502,6 +502,7 @@
     const MAX_PARTICLES = 320;
     const MAX_SHOCKWAVES = 24;
     const MAX_MESSAGES = 18;
+    const STAR_SPRITE_SIZE = 24;
     const DEBUG = false;
 
     const canvas = document.getElementById("gameCanvas");
@@ -1165,6 +1166,50 @@
       }
     }
 
+    // --- PERF FIX: pre-rendered star glow sprites -----------------------
+    // Previously every star (84 of them) was drawn every single frame with
+    // ctx.shadowBlur, which is one of the most expensive Canvas2D operations.
+    // We bake the glow into two small offscreen sprites once, then just
+    // blit them with drawImage() each frame instead of recomputing a blur.
+    let starSpriteCyan = null;
+    let starSpritePink = null;
+
+    function makeGlowSprite(hexColor) {
+      const spriteCanvas = document.createElement("canvas");
+      spriteCanvas.width = STAR_SPRITE_SIZE;
+      spriteCanvas.height = STAR_SPRITE_SIZE;
+      const sctx = spriteCanvas.getContext("2d");
+      const c = STAR_SPRITE_SIZE / 2;
+      const gradient = sctx.createRadialGradient(c, c, 0, c, c, c);
+      gradient.addColorStop(0, hexColor);
+      gradient.addColorStop(0.35, hexColor);
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      sctx.fillStyle = gradient;
+      sctx.fillRect(0, 0, STAR_SPRITE_SIZE, STAR_SPRITE_SIZE);
+      return spriteCanvas;
+    }
+
+    function buildStarSprites() {
+      starSpriteCyan = makeGlowSprite(colors.cyan);
+      starSpritePink = makeGlowSprite(colors.pink);
+    }
+
+    // --- PERF FIX: cached scanline pattern -------------------------------
+    // Previously drawScanlines() issued ~162 individual fillRect calls
+    // every frame. We pre-render a 1x4 tile once and repeat it as a
+    // pattern, cutting that to a single fillRect call per frame.
+    let scanlinePattern = null;
+
+    function buildScanlinePattern() {
+      const tile = document.createElement("canvas");
+      tile.width = 1;
+      tile.height = 4;
+      const tctx = tile.getContext("2d");
+      tctx.fillStyle = "#ffffff";
+      tctx.fillRect(0, 0, 1, 1);
+      scanlinePattern = ctx.createPattern(tile, "repeat");
+    }
+
     function resizeCanvas() {
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -1453,6 +1498,10 @@
         maxLife: 0.8,
         vy: -36
       });
+      // PERF FIX: enforce the MAX_MESSAGES cap (previously declared, never used)
+      if (game.messages.length > MAX_MESSAGES) {
+        game.messages.splice(0, game.messages.length - MAX_MESSAGES);
+      }
     }
 
     function burst(x, y, color, count, force) {
@@ -1473,6 +1522,13 @@
           angle: rand(0, TAU)
         });
       }
+      // PERF FIX: enforce the MAX_PARTICLES cap (previously declared, never used).
+      // High-combo bursts could otherwise stack particles faster than they
+      // naturally expire, which is one of the things that made frames get
+      // heavier the longer a run went on.
+      if (game.particles.length > MAX_PARTICLES) {
+        game.particles.splice(0, game.particles.length - MAX_PARTICLES);
+      }
     }
 
     function shockwave(x, y, color, radius) {
@@ -1484,6 +1540,10 @@
         age: 0,
         life: 0.48
       });
+      // PERF FIX: enforce the MAX_SHOCKWAVES cap (previously declared, never used)
+      if (game.shockwaves.length > MAX_SHOCKWAVES) {
+        game.shockwaves.splice(0, game.shockwaves.length - MAX_SHOCKWAVES);
+      }
     }
 
     function addShake(amount, duration) {
@@ -1492,6 +1552,10 @@
     }
 
     function spawnItem(type, x) {
+      // PERF FIX: enforce the MAX_ITEMS cap (previously declared, never used)
+      if (game.items.length >= MAX_ITEMS) {
+        return;
+      }
       const speed = rand(138, 206) * game.speedScale;
       const item = {
         type,
@@ -1728,16 +1792,20 @@
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
+      // PERF FIX: stars now blit a pre-rendered glow sprite instead of doing
+      // a live ctx.shadowBlur + arc + fill per star, per frame. Same look,
+      // far cheaper — this ran unconditionally for all 84 stars every frame,
+      // even on the menu screen.
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
       for (const star of game.stars) {
+        const sprite = star.hue === colors.cyan ? starSpriteCyan : starSpritePink;
+        if (!sprite) {
+          continue;
+        }
+        const size = STAR_SPRITE_SIZE * (0.32 + star.size * 0.34);
         ctx.globalAlpha = 0.32 + star.size * 0.2;
-        ctx.fillStyle = star.hue;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = star.hue;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, TAU);
-        ctx.fill();
+        ctx.drawImage(sprite, star.x - size / 2, star.y - size / 2, size, size);
       }
       ctx.restore();
 
@@ -2035,12 +2103,15 @@
     }
 
     function drawScanlines() {
+      // PERF FIX: single fillRect with a cached repeating pattern instead
+      // of ~162 individual 1px fillRect calls every frame.
+      if (!scanlinePattern) {
+        return;
+      }
       ctx.save();
       ctx.globalAlpha = 0.05;
-      ctx.fillStyle = "#ffffff";
-      for (let y = 0; y < LOGICAL_HEIGHT; y += 4) {
-        ctx.fillRect(0, y, LOGICAL_WIDTH, 1);
-      }
+      ctx.fillStyle = scanlinePattern;
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
       ctx.restore();
     }
 
@@ -2060,7 +2131,10 @@
     }
 
     function draw(time) {
-      resizeCanvas();
+      // PERF FIX: resizeCanvas() no longer runs every frame. It forced a
+      // synchronous layout read (getBoundingClientRect) 60x/second even
+      // though nothing had resized. It now only runs on boot + on an
+      // actual resize (see the ResizeObserver set up in boot()).
       setTransformWithShake();
       drawBackground(time);
 
@@ -2188,7 +2262,19 @@
       togglePause();
     });
 
-    window.addEventListener("resize", resizeCanvas);
+    // PERF FIX: resizeCanvas is no longer polled every animation frame.
+    // A ResizeObserver on the canvas itself is more reliable than a plain
+    // window "resize" listener inside embedded/iframe contexts (like the
+    // Playables host), because it fires whenever the canvas's own rendered
+    // box changes for any reason (orientation change, host container
+    // resize, safe-area changes), not just a window-level resize event.
+    if (typeof ResizeObserver !== "undefined") {
+      const stageResizeObserver = new ResizeObserver(() => resizeCanvas());
+      stageResizeObserver.observe(canvas);
+    } else {
+      window.addEventListener("resize", resizeCanvas);
+    }
+    window.addEventListener("orientationchange", resizeCanvas);
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
@@ -2209,6 +2295,8 @@
 
     async function boot() {
       buildStars();
+      buildStarSprites();
+      buildScanlinePattern();
       resizeCanvas();
       initSDKHooks();
       await loadSave();
